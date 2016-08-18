@@ -1,0 +1,22 @@
+markdown: kramdown
+permalink: /:categories/:title.html
+url: 
+lsi: false
+highlighter: rouge
+safe: true
+auto: false 
+
+paginate: 8
+paginate_path: "page:num"
+
+# presonal config
+title: watch out while walking
+description: watch out while walking
+author: ryen
+email: irwenqiang#gmail.com
+github: irwenqiang
+
+config:
+  js_dir:
+  img_dir:
+  css_dir:

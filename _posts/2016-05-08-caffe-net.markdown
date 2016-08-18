@@ -1,0 +1,61 @@
+---
+layout: post
+category: "reading"
+title: "Caffe Net"
+tags: [learning,deep learning,caffe]
+---
+
+Caffe的神经网络的结构由proto定义，Net实现.    
+Proto举例:  
+{% highlight xml linenos=table %}
+name: "LogReg"
+layer {
+  name: "mnist"
+  type: "Data"
+  top: "data"
+  top: "label"
+  data_param {
+    source: "input_leveldb"
+    batch_size: 64
+  }
+}
+layer {
+  name: "ip"
+  type: "InnerProduct"
+  bottom: "data"
+  top: "ip"
+  inner_product_param {
+    num_output: 2
+  }
+}
+layer {
+  name: "loss"
+  type: "SoftmaxWithLoss"
+  bottom: "ip"
+  bottom: "label"
+  top: "loss"
+}
+{% endhighlight %}
+其定义的网络结构如下图所示    
+![drawing](/assets/image/net_proto.png)       
+
+> Model initialization is handled by Net::Init(). 
+> The initialization mainly does two things: 
+	scaffolding the overall DAG by creating the blobs and layers (for C++ geeks: the network will retain ownership of the blobs and layers during its lifetime),     
+	and calls the layers’ SetUp() function. It also does a set of other bookkeeping things, such as validating the correctness of the overall network architecture. 
+Also, during initialization the Net explains its initialization by logging to INFO as it goes.    
+
+阅读代码时重点关注blob_name_to_idx, available_blobs. 这两个数据结构是建立layer input(bottom_vecs, bottom_id_vecs)和output(top_vecs, top_id_vecs)的索引.
+
+[net.cpp代码阅读，更新中](https://gist.github.com/irwenqiang/c95ac28fd4a3885e19f534fc0b419adb)     
+
+待解决问题:    
+1. params_和learnable_params_存放的是什么? 参考[Caffe中的Net类是如何工作的](http://withwsf.github.io/2016/05/24/Caffe%E4%B8%AD%E7%9A%84Net%E7%B1%BB%E6%98%AF%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C%E7%9A%84/)      
+2. Net中各种变量的关联关系     
+
+#### ref   
+1. [Caffe 程式閱讀筆記](http://city.shaform.com/blog/2016/02/26/caffe.html)   
+2. [Blobs, Layers, and Nets: anatomy of a Caffe model](http://caffe.berkeleyvision.org/tutorial/net_layer_blob.html)    
+3. [Caffe中的Net类是如何工作的](http://withwsf.github.io/2016/05/24/Caffe%E4%B8%AD%E7%9A%84Net%E7%B1%BB%E6%98%AF%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C%E7%9A%84/)       
+4. [在Windows中阅读Caffe代码](http://withwsf.github.io/2016/05/23/%E5%9C%A8Windows%E9%98%85%E8%AF%BBCaffe%E4%BB%A3%E7%A0%81/)     
+
