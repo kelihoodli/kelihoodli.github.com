@@ -1,0 +1,45 @@
+---
+layout: post
+category: "reading"
+title: "Caffe Parameterized Rectified Linear Unit Layer"
+tags: [learning,deep learning,caffe]
+---  
+
+#### 一、LayerSetUp     
+根据样本特征个数channels设置Weight矩阵为$$R^{channels}$$.   
+根据PReLUParameter初始化Weight矩阵     
+
+#### 三、Reshape     
+PReLULayer的input和output大小一致.       
+
+#### 三、Forward_cpu     
+实现$$y_i = \max(0, x_i) + \alpha_i \min(0, x_i)$$       
+count是$$R^{batch\_size \times num\_outputs}$$    
+dim是$$height \times width$$      
+channels是num_inputs or num_outputs, 即输入神经元和输出神经元个数.   
+int c = (i / dim) % channels /div_factor;等价于int c = i % channles;    
+因为dim=height $$\times$$ width = 1 $$\times$$ 1, div_factor = 1;      
+
+#### 四、Backword_cpu   
+1. 计算PReLU关于$$\alpha_i$$的梯度, 结果放入slope_diff            
+$$
+        \alpha_i^{(l)} =
+        \begin{cases}
+        \alpha_j^{(l)}\sigma_i^{(l+1)},  & \text{if $a_j^{(l)} \le 0$} \\
+        0, & \text{if $a_j^{(l)} \gt 0$}
+        \end{cases}
+$$
+2. 计算PReLU关于error term的梯度, 结果放入bottom_diff         
+$$
+        \sigma_i^{(l)} =
+        \begin{cases}
+        \sigma_i^{(l)},  & \text{if $a_j^{(l)} \gt 0$} \\
+        \alpha_i^{(l)}\sigma_i^{(l)}, & \text{if $a_j^{(l)} \le 0$}
+        \end{cases}
+$$
+    
+
+
+#### ref     
+1. [caffe::PReLULayer< Dtype > Class Template](http://caffe.berkeleyvision.org/doxygen/classcaffe_1_1PReLULayer.html)
+2. [Cmd Markdown 公式指导手册](https://www.zybuluo.com/codeep/note/163962)    
