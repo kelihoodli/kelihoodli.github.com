@@ -55,7 +55,7 @@ b在this->blobs_[1]_.cpu_data()
 3. 关于权重矩阵的partial derivatives存储在this->blobs_[0]->mutable_cpu_diff()   
 4. 关于bias的partial derivatives存储在this-blobs_[1]->mutable_cpu_diff()        
 得到3), 4)之后，计算前一个layer的error term:$$\delta_i^{l}=(\sum_{j=1}^{s_l+1}W_{ji}^{(l)}\delta_j^{(l+1)})f^{'}(z_i^{(l)})$$   
-
+5. 最后，计算当前Layer的error term和Weight, 计算下一层反向传播需要使用到的error term.     
 
 #### ref   
 1. [Caffe源码阅读(1) 全连接层](http://zhangliliang.com/2014/09/15/about-caffe-code-full-connected-layer/)
