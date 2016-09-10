@@ -23,9 +23,9 @@ int c = (i / dim) % channels /div_factor;等价于int c = i % channles;
 #### 四、Backword_cpu   
 1. 计算PReLU关于$$\alpha_i$$的梯度, 结果放入slope_diff            
 $$
-        \alpha_i^{(l)} =
+        \frac{\nabla E}{\nabla \alpha_i^{(l)}} =
         \begin{cases}
-        \alpha_j^{(l)}\sigma_i^{(l+1)},  & \text{if $a_j^{(l)} \le 0$} \\
+        \alpha_i^{(l)}\sigma_i^{(l+1)},  & \text{if $a_j^{(l)} \le 0$} \\
         0, & \text{if $a_j^{(l)} \gt 0$}
         \end{cases}
 $$
@@ -33,13 +33,14 @@ $$
 $$
         \sigma_i^{(l)} =
         \begin{cases}
-        \sigma_i^{(l)},  & \text{if $a_j^{(l)} \gt 0$} \\
+        \sigma_i^{(l)},  & \text{if $a_i^{(l)} \gt 0$} \\
         \alpha_i^{(l)}\sigma_i^{(l)}, & \text{if $a_j^{(l)} \le 0$}
         \end{cases}
 $$
     
-
+PReLU的反向传播算法思路和InnerProductLayer是一致的, 可以参考UFLDL<sup>[2](http://ufldl.stanford.edu/wiki/index.php/%E5%8F%8D%E5%90%91%E4%BC%A0%E5%AF%BC%E7%AE%97%E6%B3%95)</sup>自己做一次简单的推导.   
 
 #### ref     
-1. [caffe::PReLULayer< Dtype > Class Template](http://caffe.berkeleyvision.org/doxygen/classcaffe_1_1PReLULayer.html)
+1. [caffe::PReLULayer< Dtype > Class Template](http://caffe.berkeleyvision.org/doxygen/classcaffe_1_1PReLULayer.html)     
+2. [反向传导算法](http://ufldl.stanford.edu/wiki/index.php/%E5%8F%8D%E5%90%91%E4%BC%A0%E5%AF%BC%E7%AE%97%E6%B3%95)
 2. [Cmd Markdown 公式指导手册](https://www.zybuluo.com/codeep/note/163962)    
