@@ -10,19 +10,19 @@ tags: [learning,deep learning,caffe]
 根据PReLUParameter初始化Weight矩阵     
 
 #### 三、Reshape     
-PReLULayer的input和output大小一致.       
+PReLULayer的input blob和output blob的shape一致.       
 
 #### 三、Forward_cpu     
 实现$$y_i = \max(0, x_i) + \alpha_i \min(0, x_i)$$       
-count是$$R^{batch\_size \times num\_outputs}$$    
+count是$$R^{\text{batch_size} \times \text{num_outputs}}$$    
 dim是$$height \times width$$      
 channels是num_inputs or num_outputs, 即输入神经元和输出神经元个数.   
-int c = (i / dim) % channels /div_factor;等价于int c = i % channles;    
-因为dim=height $$\times$$ width = 1 $$\times$$ 1, div_factor = 1;      
+`int c = (i / dim) % channels /div_factor;`等价于`int c = i % channles;`    
+因为`dim=height *  width = 1 * 1, div_factor = 1;`      
 
 #### 四、Backword_cpu   
 1. 计算PReLU关于$$\alpha_i$$的梯度, 结果放入slope_diff          
-$\frac{\nabla E}{\nabla \alpha_i}=\sum_{y_i}\frac{\nabla E}{\nabla f(y_i)}\frac{\nabla f(y_i)}{\nabla \alpha_i}$. 具体地: 
+$$\frac{\nabla E}{\nabla \alpha_i}=\sum_{y_i}\frac{\nabla E}{\nabla f(y_i)}\frac{\nabla f(y_i)}{\nabla \alpha_i}$$. 具体地: 
 $$
         \frac{\nabla E}{\nabla \alpha_i^{(l)}} =
         \begin{cases}

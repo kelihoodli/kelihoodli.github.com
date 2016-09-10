@@ -15,11 +15,11 @@ tags: [learning,deep learning,caffe]
 2.2 1 $$\times$$ N_的bias矩阵`this->blob_[1]`      
 
 #### 二、LayerSetUp     
-根据InnerProductLayer的num_output,N_,和样本的特征个数K_, ReShape Weight矩阵(this->blobs_[0])为$$R^{N_\times K_}$$, bias向量(this->blobs_[1])为$$R^{1\times N_}$$， 并调用InnerProductParam中设置的参数初始化Filler初始化Weight和bias.    
+根据InnerProductLayer的num_output,N_,和样本的特征个数K_, ReShape Weight矩阵(this->blobs_[0])为$$R^{N\_\times K\_}$$, bias向量(this->blobs_[1])为$$R^{1\times N\_}$$， 并调用InnerProductParam中设置的参数初始化Filler初始化Weight和bias.    
 
 #### 三、Reshape     
-Reshape top[0]为$R^{M_ \times N_}$, 表示每个样本与Weight矩阵相乘的线性变换输出.     
-Reshape bias_multiplier_为$R^{1 \times M_}$, 并初始化为1      
+Reshape top[0]为$$R^{M\_ \times N\_}$$, 表示每个样本与Weight矩阵相乘的线性变换输出.     
+Reshape bias_multiplier_为$$R^{1 \times M\_}$$, 并初始化为1      
 
 #### 三、Forward_cpu     
 实现$$Y=XW^T+b$$    
