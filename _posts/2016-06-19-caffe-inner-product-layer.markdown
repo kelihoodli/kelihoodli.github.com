@@ -51,13 +51,13 @@ b在this->blobs_[1]_.cpu_data()
 
 #### 四、Backword_cpu   
 1. top_diff是error term, $$\delta_i^{l+1}$$, 其推导过程见<sup>[2](http://ufldl.stanford.edu/wiki/index.php/%E5%8F%8D%E5%90%91%E4%BC%A0%E5%AF%BC%E7%AE%97%E6%B3%95)</sup>, 从top[0]->cpu_diff()获取    
-	2. bottom_data是activation, $$\alpha$$, 从bottom[0]->cpu_data()获取     
-	3. 关于权重矩阵的partial derivatives存储在this->blobs_[0]->mutable_cpu_diff()   
-4. 关于bias的partial derivatives存储在this-blobs_[1]->mutable_cpu_diff()  
-	得到3), 4)之后，计算前一个layer的error term:$$\delta_i^{l}=(\sum_{j=1}^{s_l+1}W_{ji}^{(l)}\delta_j^{(l+1)})f^{'}(z_i^{(l)})$$   
+2. bottom_data是activation,即$$a_i^{(l)}=f(Wx)$$, 从bottom[0]->cpu_data()获取. 该buttom[0]->cpu_data()即是Forward时计算的top[0]->mutable_cpu_data()         
+3. 关于权重矩阵的partial derivatives存储在this->blobs_[0]->mutable_cpu_diff()   
+4. 关于bias的partial derivatives存储在this-blobs_[1]->mutable_cpu_diff()        
+得到3), 4)之后，计算前一个layer的error term:$$\delta_i^{l}=(\sum_{j=1}^{s_l+1}W_{ji}^{(l)}\delta_j^{(l+1)})f^{'}(z_i^{(l)})$$   
 
 
 #### ref   
-	1. [Caffe源码阅读(1) 全连接层](http://zhangliliang.com/2014/09/15/about-caffe-code-full-connected-layer/)
-	2. [UFLDL Backpropagation Algorithm](http://deeplearning.stanford.edu/wiki/index.php/Backpropagation_Algorithm)    
-	3. [BLAS Reference](https://developer.apple.com/library/mac/documentation/Accelerate/Reference/BLAS_Ref/index.html#//apple_ref/c/func/cblas_sgemm)
+1. [Caffe源码阅读(1) 全连接层](http://zhangliliang.com/2014/09/15/about-caffe-code-full-connected-layer/)
+2. [UFLDL Backpropagation Algorithm](http://deeplearning.stanford.edu/wiki/index.php/Backpropagation_Algorithm)    
+3. [BLAS Reference](https://developer.apple.com/library/mac/documentation/Accelerate/Reference/BLAS_Ref/index.html#//apple_ref/c/func/cblas_sgemm)
