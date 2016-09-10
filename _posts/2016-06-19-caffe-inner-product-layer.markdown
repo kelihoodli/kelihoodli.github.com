@@ -22,12 +22,12 @@ Reshape top[0]为$R^{M_ \times N_}$, 表示每个样本与Weight矩阵相乘的�
 Reshape bias_multiplier_为$R^{1 \times M_}$, 并初始化为1      
 
 #### 三、Forward_cpu     
-	实现$$Y=XW^T+b$$    
-	X在bottom[0]->cpu_data()     
-	Y在top[0]->mutable_cpu_data()    
-	W在this->blobs_[0]_.cpu_data()    
+实现$$Y=XW^T+b$$    
+X在bottom[0]->cpu_data()     
+Y在top[0]->mutable_cpu_data()    
+W在this->blobs_[0]_.cpu_data()    
 b在this->blobs_[1]_.cpu_data()     
-	实现方式采用cblas:     
+实现方式采用cblas:     
 {% highlight xml linenos=table %}         
 /**
  * C←αAB + βC
