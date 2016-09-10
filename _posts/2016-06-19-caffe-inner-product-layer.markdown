@@ -55,7 +55,17 @@ b在this->blobs_[1]_.cpu_data()
 3. 关于权重矩阵的partial derivatives存储在this->blobs_[0]->mutable_cpu_diff()   
 4. 关于bias的partial derivatives存储在this-blobs_[1]->mutable_cpu_diff()        
 得到3), 4)之后，计算前一个layer的error term:$$\delta_i^{l}=(\sum_{j=1}^{s_l+1}W_{ji}^{(l)}\delta_j^{(l+1)})f^{'}(z_i^{(l)})$$   
-5. 最后，计算当前Layer的error term和Weight, 计算下一层反向传播需要使用到的error term.     
+5. 最后，计算当前Layer的error term和Weight, 计算下一层反向传播需要使用到的error term.       
+
+#### 五、Deep doubts    
+1. 为什么Forward和Backward的时候，只使用bottom和top的第一个blob?       
+因为SGD等算法一次学习只要一个batch_size的数据，即一个blob的数据:    
+{% highlight xml linenos=table %}      
+virtual inline const char* type() const { return "InnerProduct"; }    
+virtual inline int ExactNumBottomBlobs() const { return 1; }      
+virtual inline int ExactNumTopBlobs() const { return 1; }      
+{% endhighlight %}       
+
 
 #### ref   
 1. [Caffe源码阅读(1) 全连接层](http://zhangliliang.com/2014/09/15/about-caffe-code-full-connected-layer/)
