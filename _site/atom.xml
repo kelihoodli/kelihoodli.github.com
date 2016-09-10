@@ -1,0 +1,611 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+ 
+ <title>watch out while walking</title>
+ <link href="http:///atom.xml" rel="self"/>
+ <link href="http://"/>
+ <updated>2016-09-10T23:27:02+08:00</updated>
+ <author>
+   <name>ryen</name>
+   <email>irwenqiang#gmail.com</email>
+ </author>
+
+ 
+ <entry>
+   <title>Caffe Parameterized Rectified Linear Unit Layer</title>
+   <link href="http:///reading/caffe-prelu-layer.html"/>
+   <updated>2016-09-10T00:00:00+08:00</updated>
+   <id>/reading/caffe-prelu-layer</id>
+   <content type="html">&lt;h4 id=&quot;layersetup&quot;&gt;一、LayerSetUp&lt;/h4&gt;
+&lt;p&gt;根据样本特征个数channels设置Weight矩阵为&lt;script type=&quot;math/tex&quot;&gt;R^{channels}&lt;/script&gt;. &lt;br /&gt;
+根据PReLUParameter初始化Weight矩阵&lt;/p&gt;
+
+&lt;h4 id=&quot;reshape&quot;&gt;三、Reshape&lt;/h4&gt;
+&lt;p&gt;PReLULayer的input blob和output blob的shape一致.&lt;/p&gt;
+
+&lt;h4 id=&quot;forwardcpu&quot;&gt;三、Forward_cpu&lt;/h4&gt;
+&lt;p&gt;实现&lt;script type=&quot;math/tex&quot;&gt;y_i = \max(0, x_i) + \alpha_i \min(0, x_i)&lt;/script&gt;     &lt;br /&gt;
+count是&lt;script type=&quot;math/tex&quot;&gt;R^{\text{batch_size} \times \text{num_outputs}}&lt;/script&gt;  &lt;br /&gt;
+dim是&lt;script type=&quot;math/tex&quot;&gt;height \times width&lt;/script&gt;    &lt;br /&gt;
+channels是num_inputs or num_outputs, 即输入神经元和输出神经元个数. &lt;br /&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;int c = (i / dim) % channels /div_factor;&lt;/code&gt;等价于&lt;code class=&quot;highlighter-rouge&quot;&gt;int c = i % channles;&lt;/code&gt;  &lt;br /&gt;
+因为&lt;code class=&quot;highlighter-rouge&quot;&gt;dim=height *  width = 1 * 1, div_factor = 1;&lt;/code&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;backwordcpu&quot;&gt;四、Backword_cpu&lt;/h4&gt;
+&lt;ol&gt;
+  &lt;li&gt;计算PReLU关于&lt;script type=&quot;math/tex&quot;&gt;\alpha_i&lt;/script&gt;的梯度, 结果放入slope_diff        &lt;br /&gt;
+&lt;script type=&quot;math/tex&quot;&gt;\frac{\nabla E}{\nabla \alpha_i}=\sum_{y_i}\frac{\nabla E}{\nabla f(y_i)}\frac{\nabla f(y_i)}{\nabla \alpha_i}&lt;/script&gt;. 具体地: 
+&lt;script type=&quot;math/tex&quot;&gt;% &lt;![CDATA[
+\frac{\nabla E}{\nabla \alpha_i^{(l)}} =
+     \begin{cases}
+     \alpha_i^{(l)}\sigma_i^{(l+1)},  &amp; \text{if $a_j^{(l)} \le 0$} \\
+     0, &amp; \text{if $a_j^{(l)} \gt 0$}
+     \end{cases} %]]&gt;&lt;/script&gt;&lt;/li&gt;
+  &lt;li&gt;计算PReLU关于error term的梯度, 结果放入bottom_diff       &lt;br /&gt;
+&lt;script type=&quot;math/tex&quot;&gt;% &lt;![CDATA[
+\sigma_i^{(l)} =
+     \begin{cases}
+     \sigma_i^{(l)},  &amp; \text{if $a_i^{(l)} \gt 0$} \\
+     \alpha_i^{(l)}\sigma_i^{(l)}, &amp; \text{if $a_j^{(l)} \le 0$}
+     \end{cases} %]]&gt;&lt;/script&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;PReLU的反向传播算法思路和InnerProductLayer是一致的, 可以参考UFLDL&lt;sup&gt;&lt;a href=&quot;http://ufldl.stanford.edu/wiki/index.php/%E5%8F%8D%E5%90%91%E4%BC%A0%E5%AF%BC%E7%AE%97%E6%B3%95&quot;&gt;2&lt;/a&gt;&lt;/sup&gt;自己做一次简单的推导.&lt;/p&gt;
+
+&lt;h4 id=&quot;ref&quot;&gt;ref&lt;/h4&gt;
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;http://caffe.berkeleyvision.org/doxygen/classcaffe_1_1PReLULayer.html&quot;&gt;caffe::PReLULayer&amp;lt; Dtype &amp;gt; Class Template&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://ufldl.stanford.edu/wiki/index.php/%E5%8F%8D%E5%90%91%E4%BC%A0%E5%AF%BC%E7%AE%97%E6%B3%95&quot;&gt;反向传导算法&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.zybuluo.com/codeep/note/163962&quot;&gt;Cmd Markdown 公式指导手册&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Caffe Batch Normalization Layer</title>
+   <link href="http:///reading/caffe-batch-normalization-layer.html"/>
+   <updated>2016-07-01T00:00:00+08:00</updated>
+   <id>/reading/caffe-batch-normalization-layer</id>
+   <content type="html">&lt;p&gt;Batch Normalization Layer没有学习&lt;script type=&quot;math/tex&quot;&gt;\gamma&lt;/script&gt;和&lt;script type=&quot;math/tex&quot;&gt;\beta&lt;/script&gt;，需要再后面加Scale Layer&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-xml&quot; data-lang=&quot;xml&quot;&gt;&lt;table style=&quot;border-spacing: 0&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;gutter gl&quot; style=&quot;text-align: right&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;layer {
+  name: &quot;scale&quot;   
+  type: &quot;ScaleLayer&quot;
+  bottom: &quot;BatchNorm&quot;
+  top: &quot;scale&quot;
+  scale_param {bias_term: true}
+}&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h4 id=&quot;ref&quot;&gt;ref&lt;/h4&gt;
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;http://arxiv.org/abs/1502.03167&quot;&gt;Ioffe S, Szegedy C. Batch normalization: Accelerating deep network training by reducing internal covariate shift[J]. arXiv preprint arXiv:1502.03167, 2015.&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kratzert.github.io/2016/02/12/understanding-the-gradient-flow-through-the-batch-normalization-layer.html&quot;&gt;Understanding the backward pass through Batch Normalization Layer&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://shuokay.com/2016/05/28/batch-norm/&quot;&gt;Batch Normalization&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://www.cnblogs.com/neopenx/p/5211969.html&quot;&gt;从Bayesian角度浅析Batch Normalization&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Caffe Inner Product Layer</title>
+   <link href="http:///reading/caffe-inner-product-layer.html"/>
+   <updated>2016-06-19T00:00:00+08:00</updated>
+   <id>/reading/caffe-inner-product-layer</id>
+   <content type="html">&lt;h4 id=&quot;layersetup&quot;&gt;一、LayerSetup&lt;/h4&gt;
+&lt;p&gt;&lt;strong&gt;1. 基本变量&lt;/strong&gt;      &lt;br /&gt;
+1.1 M_ feeds给当前layer(InnerProductLayer)的样本量, 由于每次SGD用一个batch_size的样本量学习，因此M_等于batch_size  &lt;br /&gt;
+1.2 N_ 当前layer(InnerProductLayer)的输出神经元个数  &lt;br /&gt;
+1.3 K_ 样本特征个数count(1, num_axis)=CHW   &lt;br /&gt;
+&lt;strong&gt;2. 初始化&lt;/strong&gt; &lt;br /&gt;
+2.1 N_ &lt;script type=&quot;math/tex&quot;&gt;\times&lt;/script&gt; K_的权重矩阵&lt;code class=&quot;highlighter-rouge&quot;&gt;this-&amp;gt;blob_[0]&lt;/code&gt;   &lt;br /&gt;
+2.2 1 &lt;script type=&quot;math/tex&quot;&gt;\times&lt;/script&gt; N_的bias矩阵&lt;code class=&quot;highlighter-rouge&quot;&gt;this-&amp;gt;blob_[1]&lt;/code&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;layersetup-1&quot;&gt;二、LayerSetUp&lt;/h4&gt;
+&lt;p&gt;根据InnerProductLayer的num_output,N_,和样本的特征个数K_, ReShape Weight矩阵(this-&amp;gt;blobs_[0])为&lt;script type=&quot;math/tex&quot;&gt;R^{N\_\times K\_}&lt;/script&gt;, bias向量(this-&amp;gt;blobs_[1])为&lt;script type=&quot;math/tex&quot;&gt;R^{1\times N\_}&lt;/script&gt;， 并调用InnerProductParam中设置的参数初始化Filler初始化Weight和bias.&lt;/p&gt;
+
+&lt;h4 id=&quot;reshape&quot;&gt;三、Reshape&lt;/h4&gt;
+&lt;p&gt;Reshape top[0]为&lt;script type=&quot;math/tex&quot;&gt;R^{M\_ \times N\_}&lt;/script&gt;, 表示每个样本与Weight矩阵相乘的线性变换输出.   &lt;br /&gt;
+Reshape bias_multiplier_为&lt;script type=&quot;math/tex&quot;&gt;R^{1 \times M\_}&lt;/script&gt;, 并初始化为1&lt;/p&gt;
+
+&lt;h4 id=&quot;forwardcpu&quot;&gt;三、Forward_cpu&lt;/h4&gt;
+&lt;p&gt;实现&lt;script type=&quot;math/tex&quot;&gt;Y=XW^T+b&lt;/script&gt;  &lt;br /&gt;
+X在bottom[0]-&amp;gt;cpu_data()   &lt;br /&gt;
+Y在top[0]-&amp;gt;mutable_cpu_data()  &lt;br /&gt;
+W在this-&amp;gt;blobs_[0]&lt;em&gt;.cpu_data()  &lt;br /&gt;
+b在this-&amp;gt;blobs&lt;/em&gt;[1]_.cpu_data()   &lt;br /&gt;
+实现方式采用cblas:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-xml&quot; data-lang=&quot;xml&quot;&gt;&lt;table style=&quot;border-spacing: 0&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;gutter gl&quot; style=&quot;text-align: right&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;         
+/**
+ * C←αAB + βC
+ * A: M × K
+ * B: K × N
+ * C: M × N
+ * https://developer.apple.com/library/mac/documentation/Accelerate/Reference/BLAS_Ref/#//apple_ref/c/func/cblas_sgemm
+ * M		Number of rows in matrices A and C.
+ * N		Number of columns in matrices B and C.
+ * K		Number of columns in matrix A; number of rows in matrix B.
+ * alpha	Scaling factor for the product of matrices A and B.
+ * A		Matrix A.
+ * lda		The size of the first dimention of matrix A; if you are passing a matrix A[m][n], the value should be m.
+ * B		Matrix B.
+ * ldb		The size of the first dimention of matrix B; if you are passing a matrix B[m][n], the value should be m.
+ * beta		Scaling factor for matrix C.
+ * C		Matrix C.
+ * ldc		The size of the first dimention of matrix C; if you are passing a matrix C[m][n], the value should be m.
+ */&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h4 id=&quot;backwordcpu&quot;&gt;四、Backword_cpu&lt;/h4&gt;
+&lt;ol&gt;
+  &lt;li&gt;top_diff是error term, &lt;script type=&quot;math/tex&quot;&gt;\delta_i^{l+1}&lt;/script&gt;, 其推导过程见&lt;sup&gt;&lt;a href=&quot;http://ufldl.stanford.edu/wiki/index.php/%E5%8F%8D%E5%90%91%E4%BC%A0%E5%AF%BC%E7%AE%97%E6%B3%95&quot;&gt;2&lt;/a&gt;&lt;/sup&gt;, 从top[0]-&amp;gt;cpu_diff()获取&lt;/li&gt;
+  &lt;li&gt;bottom_data是activation,即&lt;script type=&quot;math/tex&quot;&gt;a_i^{(l)}=f(Wx)&lt;/script&gt;, 从bottom[0]-&amp;gt;cpu_data()获取. 该buttom[0]-&amp;gt;cpu_data()即是Forward时计算的top[0]-&amp;gt;mutable_cpu_data()&lt;/li&gt;
+  &lt;li&gt;关于权重矩阵的partial derivatives存储在this-&amp;gt;blobs_[0]-&amp;gt;mutable_cpu_diff()&lt;/li&gt;
+  &lt;li&gt;关于bias的partial derivatives存储在this-blobs_[1]-&amp;gt;mutable_cpu_diff()      &lt;br /&gt;
+得到3), 4)之后，计算前一个layer的error term:&lt;script type=&quot;math/tex&quot;&gt;\delta_i^{l}=(\sum_{j=1}^{s_l+1}W_{ji}^{(l)}\delta_j^{(l+1)})f^{&#39;}(z_i^{(l)})&lt;/script&gt;&lt;/li&gt;
+  &lt;li&gt;最后，计算当前Layer的error term和Weight, 计算下一层反向传播需要使用到的error term.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h4 id=&quot;deep-doubts&quot;&gt;五、Deep doubts&lt;/h4&gt;
+&lt;ol&gt;
+  &lt;li&gt;为什么Forward和Backward的时候，只使用bottom和top的第一个blob?     &lt;br /&gt;
+因为SGD等算法一次学习只要一个batch_size的数据，即一个blob的数据:&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-xml&quot; data-lang=&quot;xml&quot;&gt;&lt;table style=&quot;border-spacing: 0&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;gutter gl&quot; style=&quot;text-align: right&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;      
+virtual inline const char* type() const { return &quot;InnerProduct&quot;; }    
+virtual inline int ExactNumBottomBlobs() const { return 1; }      
+virtual inline int ExactNumTopBlobs() const { return 1; }      &lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h4 id=&quot;ref&quot;&gt;ref&lt;/h4&gt;
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;http://zhangliliang.com/2014/09/15/about-caffe-code-full-connected-layer/&quot;&gt;Caffe源码阅读(1) 全连接层&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://deeplearning.stanford.edu/wiki/index.php/Backpropagation_Algorithm&quot;&gt;UFLDL Backpropagation Algorithm&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://developer.apple.com/library/mac/documentation/Accelerate/Reference/BLAS_Ref/index.html#//apple_ref/c/func/cblas_sgemm&quot;&gt;BLAS Reference&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>FM on Spark</title>
+   <link href="http:///reading/fm-spark-implementation.html"/>
+   <updated>2016-06-04T00:00:00+08:00</updated>
+   <id>/reading/fm-spark-implementation</id>
+   <content type="html">&lt;p&gt;对FM的模型公式解耦得到:      &lt;br /&gt;
+&lt;script type=&quot;math/tex&quot;&gt;y(x) = w_0 + \sum_{i=1}^nw_ix_i+\frac{1}{2}\sum_{f=1}^k((\sum_{i=1}^nv_{i,f}x_i)^2-\sum_{i=1}^nv_{i,f}^2x_{f}^2)&lt;/script&gt;     &lt;br /&gt;
+其计算复杂度从&lt;script type=&quot;math/tex&quot;&gt;O(kn^2)&lt;/script&gt;下降到线性复杂度&lt;script type=&quot;math/tex&quot;&gt;O(kn)&lt;/script&gt;&lt;/p&gt;
+
+&lt;p&gt;Spark上实现分布式算法仍然是典型的MPI的AllReduce方法. 首先将训练数据随机shuffle到不同的RDD中，在每个节点上对每个RDD训练一个局部模型. 每个epoch之后，合并(average)各个节点上的模型参数，broadcast到所有节点，作为下一个epoch训练的base model.&lt;/p&gt;
+
+&lt;p&gt;一些可供参考的tricks:   &lt;br /&gt;
+1. 对每阶FM按照不同threshod过滤噪声 &lt;br /&gt;
+2. 二次抽样, 保证算法在合适的时间内收敛. 预测前再对ctr做calibration &lt;br /&gt;
+3. Shuffle训练数据. 很多训练数据是按时间先后收集的，排除样本顺序对模型训练的干扰.    &lt;br /&gt;
+4.  在子训练数据上多轮训练. 充分利用训练数据, 提高收敛的迭代次数    &lt;br /&gt;
+5.  采用SGD学习时，&lt;a href=&quot;https://github.com/npinto/bottou-sgd/blob/master/README.txt&quot;&gt;利用权重向量/矩阵的稀疏性&lt;/a&gt;，进行优化处理.  &lt;br /&gt;
+6.  &lt;a href=&quot;http://www.jmlr.org/papers/volume12/duchi11a/duchi11a.pdf&quot;&gt;AdaGrad&lt;/a&gt;(Adaptive Subgradient Methods)    &lt;br /&gt;
+7.  Hogwild!在数据非常稀疏的情况下，利用多CPU能够得到近似最优的收敛速度&lt;/p&gt;
+
+&lt;h4 id=&quot;useful-ref&quot;&gt;useful ref&lt;/h4&gt;
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;http://blog.csdn.net/itplus/article/details/40534923&quot;&gt;Factorization Machines 学习笔记（二）模型方程&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://blog.csdn.net/itplus/article/details/40536025&quot;&gt;Factorization Machines 学习笔记（四）学习算法&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://sebastianruder.com/optimizing-gradient-descent/index.html#adagrad&quot;&gt;An overview of gradient descent optimization algorithms&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://i.stanford.edu/hazy/victor/Hogwild/&quot;&gt;HOGWILD! Code and Data&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Caffe Net</title>
+   <link href="http:///reading/caffe-net.html"/>
+   <updated>2016-05-08T00:00:00+08:00</updated>
+   <id>/reading/caffe-net</id>
+   <content type="html">&lt;p&gt;Caffe的神经网络的结构由proto定义，Net实现.  &lt;br /&gt;
+Proto举例:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-xml&quot; data-lang=&quot;xml&quot;&gt;&lt;table style=&quot;border-spacing: 0&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;gutter gl&quot; style=&quot;text-align: right&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;name: &quot;LogReg&quot;
+layer {
+  name: &quot;mnist&quot;
+  type: &quot;Data&quot;
+  top: &quot;data&quot;
+  top: &quot;label&quot;
+  data_param {
+    source: &quot;input_leveldb&quot;
+    batch_size: 64
+  }
+}
+layer {
+  name: &quot;ip&quot;
+  type: &quot;InnerProduct&quot;
+  bottom: &quot;data&quot;
+  top: &quot;ip&quot;
+  inner_product_param {
+    num_output: 2
+  }
+}
+layer {
+  name: &quot;loss&quot;
+  type: &quot;SoftmaxWithLoss&quot;
+  bottom: &quot;ip&quot;
+  bottom: &quot;label&quot;
+  top: &quot;loss&quot;
+}&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;其定义的网络结构如下图所示  &lt;br /&gt;
+&lt;img src=&quot;/assets/image/net_proto.png&quot; alt=&quot;drawing&quot; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Model initialization is handled by Net::Init(). 
+The initialization mainly does two things: 
+	scaffolding the overall DAG by creating the blobs and layers (for C++ geeks: the network will retain ownership of the blobs and layers during its lifetime),   &lt;br /&gt;
+	and calls the layers’ SetUp() function. It also does a set of other bookkeeping things, such as validating the correctness of the overall network architecture. 
+Also, during initialization the Net explains its initialization by logging to INFO as it goes.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;阅读代码时重点关注blob_name_to_idx, available_blobs. 这两个数据结构是建立layer input(bottom_vecs, bottom_id_vecs)和output(top_vecs, top_id_vecs)的索引.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://gist.github.com/irwenqiang/c95ac28fd4a3885e19f534fc0b419adb&quot;&gt;net.cpp代码阅读，更新中&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;待解决问题:  &lt;br /&gt;
+1. params_和learnable_params_存放的是什么? 参考&lt;a href=&quot;http://withwsf.github.io/2016/05/24/Caffe%E4%B8%AD%E7%9A%84Net%E7%B1%BB%E6%98%AF%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C%E7%9A%84/&quot;&gt;Caffe中的Net类是如何工作的&lt;/a&gt;    &lt;br /&gt;
+2. Net中各种变量的关联关系&lt;/p&gt;
+
+&lt;h4 id=&quot;ref&quot;&gt;ref&lt;/h4&gt;
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;http://city.shaform.com/blog/2016/02/26/caffe.html&quot;&gt;Caffe 程式閱讀筆記&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://caffe.berkeleyvision.org/tutorial/net_layer_blob.html&quot;&gt;Blobs, Layers, and Nets: anatomy of a Caffe model&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://withwsf.github.io/2016/05/24/Caffe%E4%B8%AD%E7%9A%84Net%E7%B1%BB%E6%98%AF%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C%E7%9A%84/&quot;&gt;Caffe中的Net类是如何工作的&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://withwsf.github.io/2016/05/23/%E5%9C%A8Windows%E9%98%85%E8%AF%BBCaffe%E4%BB%A3%E7%A0%81/&quot;&gt;在Windows中阅读Caffe代码&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Caffe Blob</title>
+   <link href="http:///reading/caffe-blob.html"/>
+   <updated>2016-05-07T00:00:00+08:00</updated>
+   <id>/reading/caffe-blob</id>
+   <content type="html">&lt;p&gt;Blob是一个4阶的tensor，表示为[N, K, H, W]. 在实际的代码实现中是row-major形式的一维数组存储的. W是粒度最小的维度，变化最快. 在(n, k, h, w)处的元素，其物理偏移量是&lt;script type=&quot;math/tex&quot;&gt;((n\times K + k) \times H + h) \times W + w&lt;/script&gt;  &lt;br /&gt;
+举例: &lt;br /&gt;
+在CTR预估中存储训练数据的Blob可以是&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-xml&quot; data-lang=&quot;xml&quot;&gt;&lt;table style=&quot;border-spacing: 0&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;gutter gl&quot; style=&quot;text-align: right&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;batch_size: 100   
+channels: 1000   
+height: 1   
+width: 1&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;N=batch_size表示min-batch SGD一次学习的样本量&lt;/p&gt;
+
+&lt;p&gt;K=channels表示特征的维度&lt;/p&gt;
+
+&lt;p&gt;&amp;lt;height, width&amp;gt;表示每个特征值的维度. CTR预估中特征值是离线的实值特征，维度是&lt;script type=&quot;math/tex&quot;&gt;1 \times 1&lt;/script&gt;&lt;/p&gt;
+
+&lt;p&gt;因此，总共有training_dataset.size() / N 个Blob来存储训练数据.&lt;/p&gt;
+
+&lt;p&gt;此外, Blob的Update函数用来被Net中存储参数的Blob调用，完成梯度下降过程的参数更新:   &lt;br /&gt;
+&lt;script type=&quot;math/tex&quot;&gt;data_{k+1} = data_k - diff&lt;/script&gt;   &lt;br /&gt;
+对应的代码实现是:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-xml&quot; data-lang=&quot;xml&quot;&gt;&lt;table style=&quot;border-spacing: 0&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;gutter gl&quot; style=&quot;text-align: right&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;    
+// perform computation on CPU     
+caffe_axpy&lt;span class=&quot;nt&quot;&gt;&amp;lt;Dtype&amp;gt;&lt;/span&gt;(count_, Dtype(-1) 
+			,static_cast&lt;span class=&quot;nt&quot;&gt;&amp;lt;const&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;Dtype*&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;(diff_-&amp;gt;cpu_data())
+			,static_cast&lt;span class=&quot;nt&quot;&gt;&amp;lt;Dtype&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;(data_-&amp;gt;mutable_cpu_data())
+		);&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Blob操作的代码示例:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-xml&quot; data-lang=&quot;xml&quot;&gt;&lt;table style=&quot;border-spacing: 0&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;gutter gl&quot; style=&quot;text-align: right&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;       
+#include &lt;span class=&quot;nt&quot;&gt;&amp;lt;vector&amp;gt;&lt;/span&gt;
+#include &lt;span class=&quot;nt&quot;&gt;&amp;lt;caffe&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/blob.hpp&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+#include &lt;span class=&quot;nt&quot;&gt;&amp;lt;caffe&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/util/io.hpp&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+using namespace caffe;
+using namespace std;
+
+int main(int argc, char** argv) {
+	Blob&lt;span class=&quot;nt&quot;&gt;&amp;lt;float&amp;gt;&lt;/span&gt; a;
+	cout &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &quot;Size: &quot; &lt;span class=&quot;err&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt; a.shape_string&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;endl;&lt;/span&gt;
+	&lt;span class=&quot;err&quot;&gt;a.Reshape(1,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;2,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;3,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;4);&lt;/span&gt;
+	&lt;span class=&quot;err&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&quot;Size:&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;a.shape_string()&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;endl;&lt;/span&gt;
+	&lt;span class=&quot;err&quot;&gt;float&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;p =&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;a.mutable_cpu_data();&lt;/span&gt;
+	&lt;span class=&quot;err&quot;&gt;float&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;q =&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;a.mutable_cpu_diff();&lt;/span&gt;
+	&lt;span class=&quot;err&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;(int&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;i =&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;a.count();&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;i++)&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;err&quot;&gt;p[i]&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;i;&lt;/span&gt;
+		&lt;span class=&quot;err&quot;&gt;q[i]&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;a.count()&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;i;&lt;/span&gt;
+	&lt;span class=&quot;err&quot;&gt;}&lt;/span&gt;
+
+	&lt;span class=&quot;err&quot;&gt;a.Update();&lt;/span&gt;
+
+	&lt;span class=&quot;err&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;(int&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;u =&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;u&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;a.num();&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;u++)&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;err&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;(int&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;v =&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;v&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;a.channels();&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;v++)&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;{&lt;/span&gt;
+			&lt;span class=&quot;err&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;(int&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;w =&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;w&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;a.height();&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;w++)&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;{&lt;/span&gt;
+				&lt;span class=&quot;err&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;(int&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;x =&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;a.width();&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;x++)&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;{&lt;/span&gt;
+					&lt;span class=&quot;err&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&quot;a[&quot;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;u&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&quot;][&quot;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;v&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&quot;][&quot;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&quot;][&quot;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;w&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&quot;][&quot;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&quot;]&quot;&lt;/span&gt; 
+						 &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;a.data_at(u,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;v,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;w,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;x)&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;endl;&lt;/span&gt;
+				&lt;span class=&quot;err&quot;&gt;}&lt;/span&gt;
+			&lt;span class=&quot;err&quot;&gt;}&lt;/span&gt;
+		&lt;span class=&quot;err&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;err&quot;&gt;}&lt;/span&gt;
+
+	&lt;span class=&quot;err&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&quot;ASUM:&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;a.asum_data()&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;endl;&lt;/span&gt;
+	&lt;span class=&quot;err&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&quot;SUMSQ:&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;a.sumsq_data()&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;endl;&lt;/span&gt;
+
+	&lt;span class=&quot;err&quot;&gt;BlobProto&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;bp;&lt;/span&gt;
+	&lt;span class=&quot;err&quot;&gt;a.ToProto(&amp;amp;bp,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;true);&lt;/span&gt;
+	&lt;span class=&quot;err&quot;&gt;WriteProtoToTextFile(bp,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&quot;a.txt&quot;);&lt;/span&gt;
+
+	&lt;span class=&quot;err&quot;&gt;BlobProto&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;bpr;&lt;/span&gt;
+
+	&lt;span class=&quot;err&quot;&gt;ReadProtoFromTextFile(&quot;a.txt&quot;,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;amp;bpr);&lt;/span&gt;
+	&lt;span class=&quot;err&quot;&gt;Blob&amp;lt;float&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt; b;
+	b.FromProto(bpr, true);
+
+
+	for (int u = 0; u &lt;span class=&quot;nt&quot;&gt;&amp;lt; a.num&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;();&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;u++)&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;err&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;(int&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;v =&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;v&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;a.channels();&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;v++)&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;{&lt;/span&gt;
+			&lt;span class=&quot;err&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;(int&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;w =&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;w&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;a.height();&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;w++)&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;{&lt;/span&gt;
+				&lt;span class=&quot;err&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;(int&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;x =&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;a.width();&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;x++)&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;{&lt;/span&gt;
+					&lt;span class=&quot;err&quot;&gt;cout&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&quot;b[&quot;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;u&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&quot;][&quot;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;v&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&quot;][&quot;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&quot;][&quot;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;w&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&quot;][&quot;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&quot;]&quot;&lt;/span&gt;
+						&lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;b.data_at(u,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;v,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;w,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;x)&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;endl;&lt;/span&gt;
+				&lt;span class=&quot;err&quot;&gt;}&lt;/span&gt;
+			&lt;span class=&quot;err&quot;&gt;}&lt;/span&gt;
+		&lt;span class=&quot;err&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;err&quot;&gt;}&lt;/span&gt;
+
+	&lt;span class=&quot;err&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;0;&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h4 id=&quot;refs&quot;&gt;refs&lt;/h4&gt;
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;http://caffe.berkeleyvision.org/tutorial/net_layer_blob.html&quot;&gt;Blobs, Layers, and Nets: anatomy of a Caffe model&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://imbinwang.github.io/blog/inside-caffe-code-blob&quot;&gt;Caffe源码解析之Blob&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>ufldl-tutorial-learning</title>
+   <link href="http:///reading/ufldl-tutorial-learning.html"/>
+   <updated>2016-03-22T00:00:00+08:00</updated>
+   <id>/reading/ufldl-tutorial-learning</id>
+   <content type="html">&lt;ol&gt;
+  &lt;li&gt;学习Sparse Autoencoder时，对于神经网络为什么要使用反向传播求梯度不理解:   &lt;br /&gt;
+可以参考:&lt;br /&gt;
+&lt;a href=&quot;https://www.zhihu.com/question/24827633/answer/91489990&quot;&gt;如何理解神经网络里面的反向传播算法?&lt;/a&gt;中, &lt;a href=&quot;https://www.zhihu.com/people/lilinglai&quot;&gt;@Linglai Li&lt;/a&gt;的理解 以及 &lt;a href=&quot;https://www.zhihu.com/people/chen-wei-yuan&quot;&gt;@陈唯源&lt;/a&gt;提供的参考链接.&lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;深度学习的Local optima问题    &lt;br /&gt;
+当训练点击率预估的凸优化问题, 最小化cross-entropy, 时，还会有Local optima的问题吗，怎么理解?  &lt;br /&gt;
+&lt;a href=&quot;https://www.zhihu.com/people/li-eta&quot;&gt;li Eta&lt;/a&gt;给出了&lt;a href=&quot;https://www.zhihu.com/question/38549801/answer/77027608&quot;&gt;很好的解释&lt;/a&gt;. 虽然神经网络的最后一层可以采用凸函数,&lt;br /&gt;
+但是反向传播算法在计算整个网络的梯度时，需要和前面&lt;script type=&quot;math/tex&quot;&gt;L-1&lt;/script&gt;层的激活函数一起考虑，导致最后的Loss function并不是凸的.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Diffusion of gradients问题, 实践的时候观察一下.    &lt;br /&gt;
+这个问题&lt;a href=&quot;http://michaelnielsen.org/&quot;&gt;Michael Nielsen&lt;/a&gt;在&lt;a href=&quot;http://neuralnetworksanddeeplearning.com/chap5.html&quot;&gt;Why are deep neural networks hard to train?&lt;/a&gt;  里面做了讨论. &lt;br /&gt;
+采用每个隐含层&lt;em&gt;i&lt;/em&gt;的&lt;script type=&quot;math/tex&quot;&gt;||w_i||&lt;/script&gt;和&lt;script type=&quot;math/tex&quot;&gt;||b_i||&lt;/script&gt;来衡量每个隐含层的学习速率. 并不严谨的证明了是因为每个神经元的&lt;script type=&quot;math/tex&quot;&gt;w_j\sigma^{&#39;}(z_j)&lt;/script&gt;很小引起的.&lt;/li&gt;
+&lt;/ol&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>一个在IDEA上Maven使用本地Jar的问题</title>
+   <link href="http:///records/import-local-jar-via-maven.html"/>
+   <updated>2016-03-05T00:00:00+08:00</updated>
+   <id>/records/import-local-jar-via-maven</id>
+   <content type="html">&lt;p&gt;一开始我是一直使用Eclipse开发Spark程序的，因为它的自动编译很方便. 直到后来接受不了长时间的等待   &lt;br /&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;The user operation is waiting for Building workspace to complete&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;故而开始转入Idea，并使用Maven构建工程.&lt;/p&gt;
+
+&lt;p&gt;公司使用的Spark版本是编译后的&lt;code class=&quot;highlighter-rouge&quot;&gt;spark-assembly-1.0.2-hadoop2.2.0.jar&lt;/code&gt;, 在Maven库中没有, 需要从本地导入.&lt;/p&gt;
+
+&lt;p&gt;在google了几种方法后, 个人认为通过&lt;code class=&quot;highlighter-rouge&quot;&gt;mvn install&lt;/code&gt;命令将Jar包打入到本地repository中是比较好的方式，这与根据pom.xml配置, 从Maven库中下载到repository, 之后再使用是较为一致的. &lt;br /&gt;
+具体的命令是: &lt;br /&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;mvn install:install-file -Dfile=spark-assembly-1.0.2-hadoop2.2.0.jar -DartifactId=spark-assembly -Dversion=1.0.2 -Dpackage=jar 
+&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;之后就可以在pom.xml中配置:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-xml&quot; data-lang=&quot;xml&quot;&gt;&lt;table style=&quot;border-spacing: 0&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;gutter gl&quot; style=&quot;text-align: right&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.apache.spark&lt;span class=&quot;nt&quot;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spark-assembly&lt;span class=&quot;nt&quot;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;1.0.2&lt;span class=&quot;nt&quot;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;scope&amp;gt;&lt;/span&gt;provided&lt;span class=&quot;nt&quot;&gt;&amp;lt;/scope&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;在学习一个新工具时，以往我是google，有答案了之后就接着做后面的事情，很有可能下次还会遇到相同的问题。虽然当时解决过，然而已经记不清具体的细节。所以，我还是写写记录一下吧。&lt;/p&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Ad Click Predictoin: a View from the Trenches</title>
+   <link href="http:///reading/ad-click-predictoin-a-view-from-trenches.html"/>
+   <updated>2016-03-02T00:00:00+08:00</updated>
+   <id>/reading/ad-click-predictoin-a-view-from-trenches</id>
+   <content type="html">
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Training vernus Testing</title>
+   <link href="http:///excerpt/training-vernus-test.html"/>
+   <updated>2016-02-11T00:00:00+08:00</updated>
+   <id>/excerpt/training-vernus-test</id>
+   <content type="html">&lt;p&gt;1). generalization bound
+&lt;img src=&quot;/assets/image/errorbound.png&quot; alt=&quot;drawing&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The bound is polynomia is crucial. If &lt;script type=&quot;math/tex&quot;&gt;m_{\cal H}(N)&lt;/script&gt; can be bounded by a polynomial - any polynomial -, the generalizatoin error will go to zero as &lt;script type=&quot;math/tex&quot;&gt;N \rightarrow \infty&lt;/script&gt;, since&lt;/p&gt;
+
+&lt;p&gt;2). &lt;strong&gt;&lt;em&gt;shatter&lt;/em&gt;&lt;/strong&gt; &lt;br /&gt;
+if &lt;script type=&quot;math/tex&quot;&gt;\cal H&lt;/script&gt; is capable of generating all possible dichotomies on &lt;script type=&quot;math/tex&quot;&gt;\mit x_1, ..., x_N&lt;/script&gt;, then &lt;script type=&quot;math/tex&quot;&gt;\cal H&lt;/script&gt; &lt;script type=&quot;math/tex&quot;&gt;\mit(x_1, ..., x_N) = {-1, +1}^N&lt;/script&gt; and we say that &lt;script type=&quot;math/tex&quot;&gt;\mit H&lt;/script&gt; can &lt;em&gt;shatter&lt;/em&gt; &lt;script type=&quot;math/tex&quot;&gt;\mit x_1, ..., x_N&lt;/script&gt;.&lt;/p&gt;
+
+&lt;p&gt;3). The VC Dimension  &lt;br /&gt;
+The Vapink-Chervoncenkis dimension of a hypothesis set &lt;script type=&quot;math/tex&quot;&gt;\cal H&lt;/script&gt;, denoted by &lt;script type=&quot;math/tex&quot;&gt;d_{VC}&lt;/script&gt; &lt;script type=&quot;math/tex&quot;&gt;\cal (H)&lt;/script&gt; or &lt;script type=&quot;math/tex&quot;&gt;d_{VC}&lt;/script&gt;, is the largest value of N for which &lt;script type=&quot;math/tex&quot;&gt;m_{\cal H}(N)=2^N.&lt;/script&gt; If &lt;script type=&quot;math/tex&quot;&gt;m_{\cal H}=2^N&lt;/script&gt; for all N, then &lt;script type=&quot;math/tex&quot;&gt;d_{VC}(\cal H)=\infty&lt;/script&gt;&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;m_{\cal H}(N) \le \sum_{i=0}^{d_{VC}}(\begin{matrix} N \\ i \\ \end{matrix})&lt;/script&gt;
+
+&lt;p&gt;4). VC generation bound&lt;br /&gt;
+For any tolerance &lt;script type=&quot;math/tex&quot;&gt;\delta \gt 0&lt;/script&gt;,&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;E_{out}(g) \le E_{in}(g) + \sqrt{\frac{8}{N}\text{ln}\frac{4m_{\cal H}(2N)}{\delta}}&lt;/script&gt;
+
+&lt;p&gt;with probability &lt;script type=&quot;math/tex&quot;&gt;\ge 1 - \delta&lt;/script&gt;&lt;/p&gt;
+
+&lt;p&gt;5). Sample Complexity &lt;br /&gt;
+    The sample complexity denotes how many training examples &lt;script type=&quot;math/tex&quot;&gt;N&lt;/script&gt; are needed to achieve a certain generalization performance.&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;N \ge \frac{8}{\epsilon^2}\text{ln}(\frac{4(2N)^{d_{VC}}+1}{\delta})&lt;/script&gt;
+
+&lt;p&gt;where &lt;script type=&quot;math/tex&quot;&gt;\epsilon&lt;/script&gt; is generalization error, &lt;script type=&quot;math/tex&quot;&gt;\delta&lt;/script&gt; the confidence parameter. &lt;br /&gt;
+6).  Penalty for Model Complexity&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;E_{\text{out}}(g) \le E_{\text{in}}(g) + \Omega(N, H, \delta)&lt;/script&gt;
+
+&lt;p&gt;where 
+\begin{align}
+    \Omega(N, H, \delta) = \sqrt{\frac{8}{N}\text{ln}\frac{4m_{\cal H}(2N)}{\delta}} \ 
+\le \sqrt{\frac{8}{N}\text{ln}\frac{4((2N)^{d_{VC}}+1)}{\delta}}
+\end{align}
+&lt;img src=&quot;/assets/image/we.jpeg&quot; alt=&quot;drawing&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/image/wesec.jpeg&quot; alt=&quot;drawing&quot; /&gt;&lt;/p&gt;
+
+</content>
+ </entry>
+ 
+ 
+</feed>

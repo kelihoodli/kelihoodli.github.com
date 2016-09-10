@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="FM on Spark - watch out while walking - ryen(irwenqiang#gmail.com)">
+    <title>
+      FM on Spark - watch out while walking
+    </title>
+    <!-- Bootstrap Core CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/css/blog.css" rel="stylesheet">
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media
+    queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file://
+    -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js">
+      </script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js">
+      </script>
+    <![endif]-->
+        <!-- jQuery Version 1.11.0 -->
+    <script src="/js/jquery-1.11.0.js"> </script>
+    <!-- Bootstrap Core JavaScript -->
+    <script src="/js/bootstrap.min.js"></script>
+    <!-- MatchJax JavaScript -->
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script> 
+  </head>
+  
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+            <span class="sr-only">
+              Toggle navigation
+            </span>
+            <span class="icon-bar">
+            </span>
+            <span class="icon-bar">
+            </span>
+            <span class="icon-bar">
+            </span>
+          </button>
+          <a class="navbar-brand" href="/index.html">
+            watch out while walking
+          </a>
+        </div>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+	    <!--
+            <li>
+              <a href="/categories.html">
+		categories
+              </a>
+            </li>
+	    -->
+            <li>
+              <a href="/archives.html">
+		Archives
+              </a>
+            </li>
+            <li>
+              <a href="/tags.html">
+		Tags
+              </a>
+            </li>
+            <li>
+              <a href="/about.html">
+		About
+              </a>
+            </li>
+            <li>
+              <a href="/plan.html">
+		.
+              </a>
+            </li>
+          </ul>
+ 
+        </div>
+        <!-- /.navbar-collapse -->
+      </div>
+      <!-- /.container -->
+    </nav>
+    <!-- Page Content -->
+    <div class="container">
+      <div class="row">
+        <!-- Blog Entries Column -->
+        <div class="col-md-8">
+          <!-- Blog Post -->
+<!-- Title -->
+<h2>
+  FM on Spark
+  <div class="post-date"><a href="https://github.com/irwenqiang/irwenqiang.github.com/edit/master/_posts/2016-06-04-fm-spark-implementation.markdown" target="_blank">纠错</a>&nbsp;&nbsp;
+	<span class="glyphicon glyphicon-time"></span>
+	04 Jun 2016
+  </div>
+</h2>
+<!-- Author -->
+<hr>
+<p>对FM的模型公式解耦得到:      <br />
+<script type="math/tex">y(x) = w_0 + \sum_{i=1}^nw_ix_i+\frac{1}{2}\sum_{f=1}^k((\sum_{i=1}^nv_{i,f}x_i)^2-\sum_{i=1}^nv_{i,f}^2x_{f}^2)</script>     <br />
+其计算复杂度从<script type="math/tex">O(kn^2)</script>下降到线性复杂度<script type="math/tex">O(kn)</script></p>
+
+<p>Spark上实现分布式算法仍然是典型的MPI的AllReduce方法. 首先将训练数据随机shuffle到不同的RDD中，在每个节点上对每个RDD训练一个局部模型. 每个epoch之后，合并(average)各个节点上的模型参数，broadcast到所有节点，作为下一个epoch训练的base model.</p>
+
+<p>一些可供参考的tricks:   <br />
+1. 对每阶FM按照不同threshod过滤噪声 <br />
+2. 二次抽样, 保证算法在合适的时间内收敛. 预测前再对ctr做calibration <br />
+3. Shuffle训练数据. 很多训练数据是按时间先后收集的，排除样本顺序对模型训练的干扰.    <br />
+4.  在子训练数据上多轮训练. 充分利用训练数据, 提高收敛的迭代次数    <br />
+5.  采用SGD学习时，<a href="https://github.com/npinto/bottou-sgd/blob/master/README.txt">利用权重向量/矩阵的稀疏性</a>，进行优化处理.  <br />
+6.  <a href="http://www.jmlr.org/papers/volume12/duchi11a/duchi11a.pdf">AdaGrad</a>(Adaptive Subgradient Methods)    <br />
+7.  Hogwild!在数据非常稀疏的情况下，利用多CPU能够得到近似最优的收敛速度</p>
+
+<h4 id="useful-ref">useful ref</h4>
+<ol>
+  <li><a href="http://blog.csdn.net/itplus/article/details/40534923">Factorization Machines 学习笔记（二）模型方程</a></li>
+  <li><a href="http://blog.csdn.net/itplus/article/details/40536025">Factorization Machines 学习笔记（四）学习算法</a></li>
+  <li><a href="http://sebastianruder.com/optimizing-gradient-descent/index.html#adagrad">An overview of gradient descent optimization algorithms</a></li>
+  <li><a href="http://i.stanford.edu/hazy/victor/Hogwild/">HOGWILD! Code and Data</a></li>
+</ol>
+
+<br/>
+<div style="margin-top:10px;margin-bottom:10px">
+  
+  <span class="next">
+    previous：
+    <a href="/reading/caffe-net.html">
+      Caffe Net
+    </a>
+  </span>
+   
+  
+  <span class="prev">
+    next：
+    <a href="/reading/caffe-inner-product-layer.html">
+      Caffe Inner Product Layer
+    </a>
+  </span>
+  
+</div>
+<hr>
+<!-- Blog Comments -->
+<div class="media">
+  <div id="disqus_thread"></div>
+<script>
+/**
+* RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+* LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL; // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+
+s.src = '//ryen.disqus.com/embed.js';
+
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+ 
+</div>
+
+        </div>
+      </div>
+      <!-- /.row -->
+      <hr>
+      <!-- Footer -->
+      <footer>
+        <div class="row">
+          <div class="col-lg-12">
+                        <p align="center">
+				Copyright &copy; , hosted on <a href="https://github.com">GitHub</a>, powered by Jekyll. <a href="/atom.xml">[Feed]</a>
+            </p>
+ 
+          </div>
+          <!-- /.col-lg-12 -->
+        </div>
+        <!-- /.row -->
+      </footer>
+    </div>
+    <!-- /.container -->
+  </body>
+
+</html>

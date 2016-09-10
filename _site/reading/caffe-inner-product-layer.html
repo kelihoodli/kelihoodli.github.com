@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Caffe Inner Product Layer - watch out while walking - ryen(irwenqiang#gmail.com)">
+    <title>
+      Caffe Inner Product Layer - watch out while walking
+    </title>
+    <!-- Bootstrap Core CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/css/blog.css" rel="stylesheet">
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media
+    queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file://
+    -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js">
+      </script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js">
+      </script>
+    <![endif]-->
+        <!-- jQuery Version 1.11.0 -->
+    <script src="/js/jquery-1.11.0.js"> </script>
+    <!-- Bootstrap Core JavaScript -->
+    <script src="/js/bootstrap.min.js"></script>
+    <!-- MatchJax JavaScript -->
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script> 
+  </head>
+  
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+            <span class="sr-only">
+              Toggle navigation
+            </span>
+            <span class="icon-bar">
+            </span>
+            <span class="icon-bar">
+            </span>
+            <span class="icon-bar">
+            </span>
+          </button>
+          <a class="navbar-brand" href="/index.html">
+            watch out while walking
+          </a>
+        </div>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+	    <!--
+            <li>
+              <a href="/categories.html">
+		categories
+              </a>
+            </li>
+	    -->
+            <li>
+              <a href="/archives.html">
+		Archives
+              </a>
+            </li>
+            <li>
+              <a href="/tags.html">
+		Tags
+              </a>
+            </li>
+            <li>
+              <a href="/about.html">
+		About
+              </a>
+            </li>
+            <li>
+              <a href="/plan.html">
+		.
+              </a>
+            </li>
+          </ul>
+ 
+        </div>
+        <!-- /.navbar-collapse -->
+      </div>
+      <!-- /.container -->
+    </nav>
+    <!-- Page Content -->
+    <div class="container">
+      <div class="row">
+        <!-- Blog Entries Column -->
+        <div class="col-md-8">
+          <!-- Blog Post -->
+<!-- Title -->
+<h2>
+  Caffe Inner Product Layer
+  <div class="post-date"><a href="https://github.com/irwenqiang/irwenqiang.github.com/edit/master/_posts/2016-06-19-caffe-inner-product-layer.markdown" target="_blank">纠错</a>&nbsp;&nbsp;
+	<span class="glyphicon glyphicon-time"></span>
+	19 Jun 2016
+  </div>
+</h2>
+<!-- Author -->
+<hr>
+<h4 id="layersetup">一、LayerSetup</h4>
+<p><strong>1. 基本变量</strong>      <br />
+1.1 M_ feeds给当前layer(InnerProductLayer)的样本量, 由于每次SGD用一个batch_size的样本量学习，因此M_等于batch_size  <br />
+1.2 N_ 当前layer(InnerProductLayer)的输出神经元个数  <br />
+1.3 K_ 样本特征个数count(1, num_axis)=CHW   <br />
+<strong>2. 初始化</strong> <br />
+2.1 N_ <script type="math/tex">\times</script> K_的权重矩阵<code class="highlighter-rouge">this-&gt;blob_[0]</code>   <br />
+2.2 1 <script type="math/tex">\times</script> N_的bias矩阵<code class="highlighter-rouge">this-&gt;blob_[1]</code></p>
+
+<h4 id="layersetup-1">二、LayerSetUp</h4>
+<p>根据InnerProductLayer的num_output,N_,和样本的特征个数K_, ReShape Weight矩阵(this-&gt;blobs_[0])为<script type="math/tex">R^{N\_\times K\_}</script>, bias向量(this-&gt;blobs_[1])为<script type="math/tex">R^{1\times N\_}</script>， 并调用InnerProductParam中设置的参数初始化Filler初始化Weight和bias.</p>
+
+<h4 id="reshape">三、Reshape</h4>
+<p>Reshape top[0]为<script type="math/tex">R^{M\_ \times N\_}</script>, 表示每个样本与Weight矩阵相乘的线性变换输出.   <br />
+Reshape bias_multiplier_为<script type="math/tex">R^{1 \times M\_}</script>, 并初始化为1</p>
+
+<h4 id="forwardcpu">三、Forward_cpu</h4>
+<p>实现<script type="math/tex">Y=XW^T+b</script>  <br />
+X在bottom[0]-&gt;cpu_data()   <br />
+Y在top[0]-&gt;mutable_cpu_data()  <br />
+W在this-&gt;blobs_[0]<em>.cpu_data()  <br />
+b在this-&gt;blobs</em>[1]_.cpu_data()   <br />
+实现方式采用cblas:</p>
+
+<figure class="highlight"><pre><code class="language-xml" data-lang="xml"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19</pre></td><td class="code"><pre>         
+/**
+ * C←αAB + βC
+ * A: M × K
+ * B: K × N
+ * C: M × N
+ * https://developer.apple.com/library/mac/documentation/Accelerate/Reference/BLAS_Ref/#//apple_ref/c/func/cblas_sgemm
+ * M		Number of rows in matrices A and C.
+ * N		Number of columns in matrices B and C.
+ * K		Number of columns in matrix A; number of rows in matrix B.
+ * alpha	Scaling factor for the product of matrices A and B.
+ * A		Matrix A.
+ * lda		The size of the first dimention of matrix A; if you are passing a matrix A[m][n], the value should be m.
+ * B		Matrix B.
+ * ldb		The size of the first dimention of matrix B; if you are passing a matrix B[m][n], the value should be m.
+ * beta		Scaling factor for matrix C.
+ * C		Matrix C.
+ * ldc		The size of the first dimention of matrix C; if you are passing a matrix C[m][n], the value should be m.
+ */<span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
+
+<h4 id="backwordcpu">四、Backword_cpu</h4>
+<ol>
+  <li>top_diff是error term, <script type="math/tex">\delta_i^{l+1}</script>, 其推导过程见<sup><a href="http://ufldl.stanford.edu/wiki/index.php/%E5%8F%8D%E5%90%91%E4%BC%A0%E5%AF%BC%E7%AE%97%E6%B3%95">2</a></sup>, 从top[0]-&gt;cpu_diff()获取</li>
+  <li>bottom_data是activation,即<script type="math/tex">a_i^{(l)}=f(Wx)</script>, 从bottom[0]-&gt;cpu_data()获取. 该buttom[0]-&gt;cpu_data()即是Forward时计算的top[0]-&gt;mutable_cpu_data()</li>
+  <li>关于权重矩阵的partial derivatives存储在this-&gt;blobs_[0]-&gt;mutable_cpu_diff()</li>
+  <li>关于bias的partial derivatives存储在this-blobs_[1]-&gt;mutable_cpu_diff()      <br />
+得到3), 4)之后，计算前一个layer的error term:<script type="math/tex">\delta_i^{l}=(\sum_{j=1}^{s_l+1}W_{ji}^{(l)}\delta_j^{(l+1)})f^{'}(z_i^{(l)})</script></li>
+  <li>最后，计算当前Layer的error term和Weight, 计算下一层反向传播需要使用到的error term.</li>
+</ol>
+
+<h4 id="deep-doubts">五、Deep doubts</h4>
+<ol>
+  <li>为什么Forward和Backward的时候，只使用bottom和top的第一个blob?     <br />
+因为SGD等算法一次学习只要一个batch_size的数据，即一个blob的数据:</li>
+</ol>
+
+<figure class="highlight"><pre><code class="language-xml" data-lang="xml"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4</pre></td><td class="code"><pre>      
+virtual inline const char* type() const { return "InnerProduct"; }    
+virtual inline int ExactNumBottomBlobs() const { return 1; }      
+virtual inline int ExactNumTopBlobs() const { return 1; }      <span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
+
+<h4 id="ref">ref</h4>
+<ol>
+  <li><a href="http://zhangliliang.com/2014/09/15/about-caffe-code-full-connected-layer/">Caffe源码阅读(1) 全连接层</a></li>
+  <li><a href="http://deeplearning.stanford.edu/wiki/index.php/Backpropagation_Algorithm">UFLDL Backpropagation Algorithm</a></li>
+  <li><a href="https://developer.apple.com/library/mac/documentation/Accelerate/Reference/BLAS_Ref/index.html#//apple_ref/c/func/cblas_sgemm">BLAS Reference</a></li>
+</ol>
+
+<br/>
+<div style="margin-top:10px;margin-bottom:10px">
+  
+  <span class="next">
+    previous：
+    <a href="/reading/fm-spark-implementation.html">
+      FM on Spark
+    </a>
+  </span>
+   
+  
+  <span class="prev">
+    next：
+    <a href="/reading/caffe-batch-normalization-layer.html">
+      Caffe Batch Normalization Layer
+    </a>
+  </span>
+  
+</div>
+<hr>
+<!-- Blog Comments -->
+<div class="media">
+  <div id="disqus_thread"></div>
+<script>
+/**
+* RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+* LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL; // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+
+s.src = '//ryen.disqus.com/embed.js';
+
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+ 
+</div>
+
+        </div>
+      </div>
+      <!-- /.row -->
+      <hr>
+      <!-- Footer -->
+      <footer>
+        <div class="row">
+          <div class="col-lg-12">
+                        <p align="center">
+				Copyright &copy; , hosted on <a href="https://github.com">GitHub</a>, powered by Jekyll. <a href="/atom.xml">[Feed]</a>
+            </p>
+ 
+          </div>
+          <!-- /.col-lg-12 -->
+        </div>
+        <!-- /.row -->
+      </footer>
+    </div>
+    <!-- /.container -->
+  </body>
+
+</html>

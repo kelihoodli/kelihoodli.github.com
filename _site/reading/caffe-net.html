@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Caffe Net - watch out while walking - ryen(irwenqiang#gmail.com)">
+    <title>
+      Caffe Net - watch out while walking
+    </title>
+    <!-- Bootstrap Core CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/css/blog.css" rel="stylesheet">
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media
+    queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file://
+    -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js">
+      </script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js">
+      </script>
+    <![endif]-->
+        <!-- jQuery Version 1.11.0 -->
+    <script src="/js/jquery-1.11.0.js"> </script>
+    <!-- Bootstrap Core JavaScript -->
+    <script src="/js/bootstrap.min.js"></script>
+    <!-- MatchJax JavaScript -->
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script> 
+  </head>
+  
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+            <span class="sr-only">
+              Toggle navigation
+            </span>
+            <span class="icon-bar">
+            </span>
+            <span class="icon-bar">
+            </span>
+            <span class="icon-bar">
+            </span>
+          </button>
+          <a class="navbar-brand" href="/index.html">
+            watch out while walking
+          </a>
+        </div>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+	    <!--
+            <li>
+              <a href="/categories.html">
+		categories
+              </a>
+            </li>
+	    -->
+            <li>
+              <a href="/archives.html">
+		Archives
+              </a>
+            </li>
+            <li>
+              <a href="/tags.html">
+		Tags
+              </a>
+            </li>
+            <li>
+              <a href="/about.html">
+		About
+              </a>
+            </li>
+            <li>
+              <a href="/plan.html">
+		.
+              </a>
+            </li>
+          </ul>
+ 
+        </div>
+        <!-- /.navbar-collapse -->
+      </div>
+      <!-- /.container -->
+    </nav>
+    <!-- Page Content -->
+    <div class="container">
+      <div class="row">
+        <!-- Blog Entries Column -->
+        <div class="col-md-8">
+          <!-- Blog Post -->
+<!-- Title -->
+<h2>
+  Caffe Net
+  <div class="post-date"><a href="https://github.com/irwenqiang/irwenqiang.github.com/edit/master/_posts/2016-05-08-caffe-net.markdown" target="_blank">纠错</a>&nbsp;&nbsp;
+	<span class="glyphicon glyphicon-time"></span>
+	08 May 2016
+  </div>
+</h2>
+<!-- Author -->
+<hr>
+<p>Caffe的神经网络的结构由proto定义，Net实现.  <br />
+Proto举例:</p>
+
+<figure class="highlight"><pre><code class="language-xml" data-lang="xml"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27</pre></td><td class="code"><pre>name: "LogReg"
+layer {
+  name: "mnist"
+  type: "Data"
+  top: "data"
+  top: "label"
+  data_param {
+    source: "input_leveldb"
+    batch_size: 64
+  }
+}
+layer {
+  name: "ip"
+  type: "InnerProduct"
+  bottom: "data"
+  top: "ip"
+  inner_product_param {
+    num_output: 2
+  }
+}
+layer {
+  name: "loss"
+  type: "SoftmaxWithLoss"
+  bottom: "ip"
+  bottom: "label"
+  top: "loss"
+}<span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
+
+<p>其定义的网络结构如下图所示  <br />
+<img src="/assets/image/net_proto.png" alt="drawing" /></p>
+
+<blockquote>
+  <p>Model initialization is handled by Net::Init(). 
+The initialization mainly does two things: 
+	scaffolding the overall DAG by creating the blobs and layers (for C++ geeks: the network will retain ownership of the blobs and layers during its lifetime),   <br />
+	and calls the layers’ SetUp() function. It also does a set of other bookkeeping things, such as validating the correctness of the overall network architecture. 
+Also, during initialization the Net explains its initialization by logging to INFO as it goes.</p>
+</blockquote>
+
+<p>阅读代码时重点关注blob_name_to_idx, available_blobs. 这两个数据结构是建立layer input(bottom_vecs, bottom_id_vecs)和output(top_vecs, top_id_vecs)的索引.</p>
+
+<p><a href="https://gist.github.com/irwenqiang/c95ac28fd4a3885e19f534fc0b419adb">net.cpp代码阅读，更新中</a></p>
+
+<p>待解决问题:  <br />
+1. params_和learnable_params_存放的是什么? 参考<a href="http://withwsf.github.io/2016/05/24/Caffe%E4%B8%AD%E7%9A%84Net%E7%B1%BB%E6%98%AF%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C%E7%9A%84/">Caffe中的Net类是如何工作的</a>    <br />
+2. Net中各种变量的关联关系</p>
+
+<h4 id="ref">ref</h4>
+<ol>
+  <li><a href="http://city.shaform.com/blog/2016/02/26/caffe.html">Caffe 程式閱讀筆記</a></li>
+  <li><a href="http://caffe.berkeleyvision.org/tutorial/net_layer_blob.html">Blobs, Layers, and Nets: anatomy of a Caffe model</a></li>
+  <li><a href="http://withwsf.github.io/2016/05/24/Caffe%E4%B8%AD%E7%9A%84Net%E7%B1%BB%E6%98%AF%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C%E7%9A%84/">Caffe中的Net类是如何工作的</a></li>
+  <li><a href="http://withwsf.github.io/2016/05/23/%E5%9C%A8Windows%E9%98%85%E8%AF%BBCaffe%E4%BB%A3%E7%A0%81/">在Windows中阅读Caffe代码</a></li>
+</ol>
+
+
+<br/>
+<div style="margin-top:10px;margin-bottom:10px">
+  
+  <span class="next">
+    previous：
+    <a href="/reading/caffe-blob.html">
+      Caffe Blob
+    </a>
+  </span>
+   
+  
+  <span class="prev">
+    next：
+    <a href="/reading/fm-spark-implementation.html">
+      FM on Spark
+    </a>
+  </span>
+  
+</div>
+<hr>
+<!-- Blog Comments -->
+<div class="media">
+  <div id="disqus_thread"></div>
+<script>
+/**
+* RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+* LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL; // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+
+s.src = '//ryen.disqus.com/embed.js';
+
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+ 
+</div>
+
+        </div>
+      </div>
+      <!-- /.row -->
+      <hr>
+      <!-- Footer -->
+      <footer>
+        <div class="row">
+          <div class="col-lg-12">
+                        <p align="center">
+				Copyright &copy; , hosted on <a href="https://github.com">GitHub</a>, powered by Jekyll. <a href="/atom.xml">[Feed]</a>
+            </p>
+ 
+          </div>
+          <!-- /.col-lg-12 -->
+        </div>
+        <!-- /.row -->
+      </footer>
+    </div>
+    <!-- /.container -->
+  </body>
+
+</html>
