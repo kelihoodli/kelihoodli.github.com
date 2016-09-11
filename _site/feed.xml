@@ -5,9 +5,129 @@
     <description>watch out while walking</description>
     <link>/</link>
     <atom:link href="/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Sat, 10 Sep 2016 23:33:35 +0800</pubDate>
-    <lastBuildDate>Sat, 10 Sep 2016 23:33:35 +0800</lastBuildDate>
+    <pubDate>Sun, 11 Sep 2016 23:21:24 +0800</pubDate>
+    <lastBuildDate>Sun, 11 Sep 2016 23:21:24 +0800</lastBuildDate>
     <generator>Jekyll v3.1.2</generator>
+    
+      <item>
+        <title>Caffe SoftMax Layer</title>
+        <description>&lt;h4 id=&quot;reshape&quot;&gt;一、Reshape&lt;/h4&gt;
+&lt;p&gt;multiplier_data初始化为&lt;script type=&quot;math/tex&quot;&gt;R^{1\times2}&lt;/script&gt;的矩阵，每个元素设置为1.   &lt;br /&gt;
+outer_num_ = M_, 等于一次测试所用样本量大小batch_size  &lt;br /&gt;
+inner_num = HW = 1&lt;/p&gt;
+
+&lt;h4 id=&quot;forwardcpu&quot;&gt;二、Forward_cpu&lt;/h4&gt;
+&lt;p&gt;实现SoftMax: &lt;script type=&quot;math/tex&quot;&gt;y_i = \max(0, x_i) + \alpha_i \min(0, x_i)&lt;/script&gt;     &lt;br /&gt;
+1. 拷贝&lt;script type=&quot;math/tex&quot;&gt;W^Tx&lt;/script&gt;到top_data&lt;script type=&quot;math/tex&quot;&gt;\in R^{M\_ \times N\_}&lt;/script&gt;  &lt;br /&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;caffe_copy(inner_num_, bottom_data + i * dim, scale_data);&lt;/code&gt;    &lt;br /&gt;
+2. 计算每个label下，最大的&lt;script type=&quot;math/tex&quot;&gt;W^Tx&lt;/script&gt;&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-xml&quot; data-lang=&quot;xml&quot;&gt;&lt;table style=&quot;border-spacing: 0&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;gutter gl&quot; style=&quot;text-align: right&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;   
+for (int j = 0; j &lt;span class=&quot;nt&quot;&gt;&amp;lt; channels&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;j++)&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;err&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;(int&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;k =&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;0;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;k&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;inner_num_;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;k++)&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;err&quot;&gt;scale_data[k]&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;std::max(scale_data[k],&lt;/span&gt;
+            &lt;span class=&quot;err&quot;&gt;bottom_data[i&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;dim&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;j&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;inner_num_&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;k]);&lt;/span&gt;
+      &lt;span class=&quot;err&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;每个&lt;script type=&quot;math/tex&quot;&gt;W^Tx&lt;/script&gt;减去最大值，避免指数运算结果太大&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-xml&quot; data-lang=&quot;xml&quot;&gt;&lt;table style=&quot;border-spacing: 0&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;gutter gl&quot; style=&quot;text-align: right&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;   
+// subtraction
+// top_data = -1 * sum_multiplier_.cpu_data() * scale_data + 1 * top_data
+// top_data: 			channels * inner_num_
+// sum_multiplier_.cpu_data: 	channels * 1
+// scale_data:			1 * inner_num_
+caffe_cpu_gemm&lt;span class=&quot;nt&quot;&gt;&amp;lt;Dtype&amp;gt;&lt;/span&gt;(CblasNoTrans, CblasNoTrans
+		      , channels, inner_num_, 1, -1.
+  		      , sum_multiplier_.cpu_data(), scale_data, 1., top_data);      &lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;计算指数&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-xml&quot; data-lang=&quot;xml&quot;&gt;&lt;table style=&quot;border-spacing: 0&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;gutter gl&quot; style=&quot;text-align: right&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;   
+// exponentiation
+// top_data[i...dim] = exp(top_data[i...dim])
+caffe_exp&lt;span class=&quot;nt&quot;&gt;&amp;lt;Dtype&amp;gt;&lt;/span&gt;(dim, top_data, top_data);    &lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;计算归一项&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-xml&quot; data-lang=&quot;xml&quot;&gt;&lt;table style=&quot;border-spacing: 0&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;gutter gl&quot; style=&quot;text-align: right&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;   
+// sum after exp
+// scale_data = top_data * sum_multiplier_.cpu_data
+// top_data: 			channels * inner_num_
+// sum_multiplier_.cpu_data:	channels * 1
+// scale_data:			inner_num_ * 1
+caffe_cpu_gemv&lt;span class=&quot;nt&quot;&gt;&amp;lt;Dtype&amp;gt;&lt;/span&gt;(CblasTrans, channels, inner_num_, 1.
+		      , top_data, sum_multiplier_.cpu_data(), 0., scale_data);     &lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;对每个label output计算SoftMax&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-xml&quot; data-lang=&quot;xml&quot;&gt;&lt;table style=&quot;border-spacing: 0&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;gutter gl&quot; style=&quot;text-align: right&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;     
+// division
+for (int j = 0; j &lt;span class=&quot;nt&quot;&gt;&amp;lt; channels&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;j++)&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;err&quot;&gt;//&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;top_data =&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;top_data&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;scale_data&lt;/span&gt;
+	&lt;span class=&quot;err&quot;&gt;caffe_div(inner_num_,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;top_data,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;scale_data,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;top_data);&lt;/span&gt;
+	&lt;span class=&quot;err&quot;&gt;top_data&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;inner_num_;&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+</description>
+        <pubDate>Sun, 11 Sep 2016 00:00:00 +0800</pubDate>
+        <link>/reading/caffe-softmax-layer.html</link>
+        <guid isPermaLink="true">/reading/caffe-softmax-layer.html</guid>
+        
+        <category>learning</category>
+        
+        <category>deep learning</category>
+        
+        <category>caffe</category>
+        
+        
+        <category>reading</category>
+        
+      </item>
     
       <item>
         <title>Caffe Parameterized Rectified Linear Unit Layer</title>
@@ -633,61 +753,6 @@ int main(int argc, char** argv) {
         
         
         <category>reading</category>
-        
-      </item>
-    
-      <item>
-        <title>Training vernus Testing</title>
-        <description>&lt;p&gt;1). generalization bound
-&lt;img src=&quot;/assets/image/errorbound.png&quot; alt=&quot;drawing&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;The bound is polynomia is crucial. If &lt;script type=&quot;math/tex&quot;&gt;m_{\cal H}(N)&lt;/script&gt; can be bounded by a polynomial - any polynomial -, the generalizatoin error will go to zero as &lt;script type=&quot;math/tex&quot;&gt;N \rightarrow \infty&lt;/script&gt;, since&lt;/p&gt;
-
-&lt;p&gt;2). &lt;strong&gt;&lt;em&gt;shatter&lt;/em&gt;&lt;/strong&gt; &lt;br /&gt;
-if &lt;script type=&quot;math/tex&quot;&gt;\cal H&lt;/script&gt; is capable of generating all possible dichotomies on &lt;script type=&quot;math/tex&quot;&gt;\mit x_1, ..., x_N&lt;/script&gt;, then &lt;script type=&quot;math/tex&quot;&gt;\cal H&lt;/script&gt; &lt;script type=&quot;math/tex&quot;&gt;\mit(x_1, ..., x_N) = {-1, +1}^N&lt;/script&gt; and we say that &lt;script type=&quot;math/tex&quot;&gt;\mit H&lt;/script&gt; can &lt;em&gt;shatter&lt;/em&gt; &lt;script type=&quot;math/tex&quot;&gt;\mit x_1, ..., x_N&lt;/script&gt;.&lt;/p&gt;
-
-&lt;p&gt;3). The VC Dimension  &lt;br /&gt;
-The Vapink-Chervoncenkis dimension of a hypothesis set &lt;script type=&quot;math/tex&quot;&gt;\cal H&lt;/script&gt;, denoted by &lt;script type=&quot;math/tex&quot;&gt;d_{VC}&lt;/script&gt; &lt;script type=&quot;math/tex&quot;&gt;\cal (H)&lt;/script&gt; or &lt;script type=&quot;math/tex&quot;&gt;d_{VC}&lt;/script&gt;, is the largest value of N for which &lt;script type=&quot;math/tex&quot;&gt;m_{\cal H}(N)=2^N.&lt;/script&gt; If &lt;script type=&quot;math/tex&quot;&gt;m_{\cal H}=2^N&lt;/script&gt; for all N, then &lt;script type=&quot;math/tex&quot;&gt;d_{VC}(\cal H)=\infty&lt;/script&gt;&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;m_{\cal H}(N) \le \sum_{i=0}^{d_{VC}}(\begin{matrix} N \\ i \\ \end{matrix})&lt;/script&gt;
-
-&lt;p&gt;4). VC generation bound&lt;br /&gt;
-For any tolerance &lt;script type=&quot;math/tex&quot;&gt;\delta \gt 0&lt;/script&gt;,&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;E_{out}(g) \le E_{in}(g) + \sqrt{\frac{8}{N}\text{ln}\frac{4m_{\cal H}(2N)}{\delta}}&lt;/script&gt;
-
-&lt;p&gt;with probability &lt;script type=&quot;math/tex&quot;&gt;\ge 1 - \delta&lt;/script&gt;&lt;/p&gt;
-
-&lt;p&gt;5). Sample Complexity &lt;br /&gt;
-    The sample complexity denotes how many training examples &lt;script type=&quot;math/tex&quot;&gt;N&lt;/script&gt; are needed to achieve a certain generalization performance.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;N \ge \frac{8}{\epsilon^2}\text{ln}(\frac{4(2N)^{d_{VC}}+1}{\delta})&lt;/script&gt;
-
-&lt;p&gt;where &lt;script type=&quot;math/tex&quot;&gt;\epsilon&lt;/script&gt; is generalization error, &lt;script type=&quot;math/tex&quot;&gt;\delta&lt;/script&gt; the confidence parameter. &lt;br /&gt;
-6).  Penalty for Model Complexity&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;E_{\text{out}}(g) \le E_{\text{in}}(g) + \Omega(N, H, \delta)&lt;/script&gt;
-
-&lt;p&gt;where 
-\begin{align}
-    \Omega(N, H, \delta) = \sqrt{\frac{8}{N}\text{ln}\frac{4m_{\cal H}(2N)}{\delta}} \ 
-\le \sqrt{\frac{8}{N}\text{ln}\frac{4((2N)^{d_{VC}}+1)}{\delta}}
-\end{align}
-&lt;img src=&quot;/assets/image/we.jpeg&quot; alt=&quot;drawing&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/image/wesec.jpeg&quot; alt=&quot;drawing&quot; /&gt;&lt;/p&gt;
-
-</description>
-        <pubDate>Thu, 11 Feb 2016 00:00:00 +0800</pubDate>
-        <link>/excerpt/training-vernus-test.html</link>
-        <guid isPermaLink="true">/excerpt/training-vernus-test.html</guid>
-        
-        <category>excerpt</category>
-        
-        <category>reading</category>
-        
-        
-        <category>excerpt</category>
         
       </item>
     

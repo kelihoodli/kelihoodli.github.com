@@ -5,9 +5,9 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Caffe Batch Normalization Layer - watch out while walking - ryen(irwenqiang#gmail.com)">
+    <meta name="description" content="Caffe SoftMax Layer - watch out while walking - ryen(irwenqiang#gmail.com)">
     <title>
-      Caffe Batch Normalization Layer - watch out while walking
+      Caffe SoftMax Layer - watch out while walking
     </title>
     <!-- Bootstrap Core CSS -->
     <link href="/css/bootstrap.min.css" rel="stylesheet">
@@ -97,15 +97,24 @@
           <!-- Blog Post -->
 <!-- Title -->
 <h2>
-  Caffe Batch Normalization Layer
-  <div class="post-date"><a href="https://github.com/irwenqiang/irwenqiang.github.com/edit/master/_posts/2016-07-01-caffe-batch-normalization-layer.markdown" target="_blank">纠错</a>&nbsp;&nbsp;
+  Caffe SoftMax Layer
+  <div class="post-date"><a href="https://github.com/irwenqiang/irwenqiang.github.com/edit/master/_posts/2016-09-11-caffe-softmax-layer.markdown" target="_blank">纠错</a>&nbsp;&nbsp;
 	<span class="glyphicon glyphicon-time"></span>
-	01 Jul 2016
+	11 Sep 2016
   </div>
 </h2>
 <!-- Author -->
 <hr>
-<p>Batch Normalization Layer没有学习<script type="math/tex">\gamma</script>和<script type="math/tex">\beta</script>，需要再后面加Scale Layer</p>
+<h4 id="reshape">一、Reshape</h4>
+<p>multiplier_data初始化为<script type="math/tex">R^{1\times2}</script>的矩阵，每个元素设置为1.   <br />
+outer_num_ = M_, 等于一次测试所用样本量大小batch_size  <br />
+inner_num = HW = 1</p>
+
+<h4 id="forwardcpu">二、Forward_cpu</h4>
+<p>实现SoftMax: <script type="math/tex">y_i = \max(0, x_i) + \alpha_i \min(0, x_i)</script>     <br />
+1. 拷贝<script type="math/tex">W^Tx</script>到top_data<script type="math/tex">\in R^{M\_ \times N\_}</script>  <br />
+<code class="highlighter-rouge">caffe_copy(inner_num_, bottom_data + i * dim, scale_data);</code>    <br />
+2. 计算每个label下，最大的<script type="math/tex">W^Tx</script></p>
 
 <figure class="highlight"><pre><code class="language-xml" data-lang="xml"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
 2
@@ -113,40 +122,102 @@
 4
 5
 6
-7</pre></td><td class="code"><pre>layer {
-  name: "scale"   
-  type: "ScaleLayer"
-  bottom: "BatchNorm"
-  top: "scale"
-  scale_param {bias_term: true}
-}<span class="w">
+7</pre></td><td class="code"><pre>   
+for (int j = 0; j <span class="nt">&lt; channels</span><span class="err">;</span> <span class="err">j++)</span> <span class="err">{</span>
+      <span class="err">for</span> <span class="err">(int</span> <span class="na">k =</span> <span class="s">0;</span> <span class="err">k</span> <span class="err">&lt;</span> <span class="err">inner_num_;</span> <span class="err">k++)</span> <span class="err">{</span>
+        <span class="err">scale_data[k]</span> <span class="err">=</span> <span class="err">std::max(scale_data[k],</span>
+            <span class="err">bottom_data[i</span> <span class="err">*</span> <span class="err">dim</span> <span class="err">+</span> <span class="err">j</span> <span class="err">*</span> <span class="err">inner_num_</span> <span class="err">+</span> <span class="err">k]);</span>
+      <span class="err">}</span>
+<span class="err">}</span><span class="w">
 </span></pre></td></tr></tbody></table></code></pre></figure>
 
-<h4 id="ref">ref</h4>
 <ol>
-  <li><a href="http://arxiv.org/abs/1502.03167">Ioffe S, Szegedy C. Batch normalization: Accelerating deep network training by reducing internal covariate shift[J]. arXiv preprint arXiv:1502.03167, 2015.</a></li>
-  <li><a href="https://kratzert.github.io/2016/02/12/understanding-the-gradient-flow-through-the-batch-normalization-layer.html">Understanding the backward pass through Batch Normalization Layer</a></li>
-  <li><a href="http://shuokay.com/2016/05/28/batch-norm/">Batch Normalization</a></li>
-  <li><a href="http://www.cnblogs.com/neopenx/p/5211969.html">从Bayesian角度浅析Batch Normalization</a></li>
+  <li>每个<script type="math/tex">W^Tx</script>减去最大值，避免指数运算结果太大</li>
 </ol>
+
+<figure class="highlight"><pre><code class="language-xml" data-lang="xml"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9</pre></td><td class="code"><pre>   
+// subtraction
+// top_data = -1 * sum_multiplier_.cpu_data() * scale_data + 1 * top_data
+// top_data: 			channels * inner_num_
+// sum_multiplier_.cpu_data: 	channels * 1
+// scale_data:			1 * inner_num_
+caffe_cpu_gemm<span class="nt">&lt;Dtype&gt;</span>(CblasNoTrans, CblasNoTrans
+		      , channels, inner_num_, 1, -1.
+  		      , sum_multiplier_.cpu_data(), scale_data, 1., top_data);      <span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
+
+<ol>
+  <li>计算指数</li>
+</ol>
+
+<figure class="highlight"><pre><code class="language-xml" data-lang="xml"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4</pre></td><td class="code"><pre>   
+// exponentiation
+// top_data[i...dim] = exp(top_data[i...dim])
+caffe_exp<span class="nt">&lt;Dtype&gt;</span>(dim, top_data, top_data);    <span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
+
+<ol>
+  <li>计算归一项</li>
+</ol>
+
+<figure class="highlight"><pre><code class="language-xml" data-lang="xml"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8</pre></td><td class="code"><pre>   
+// sum after exp
+// scale_data = top_data * sum_multiplier_.cpu_data
+// top_data: 			channels * inner_num_
+// sum_multiplier_.cpu_data:	channels * 1
+// scale_data:			inner_num_ * 1
+caffe_cpu_gemv<span class="nt">&lt;Dtype&gt;</span>(CblasTrans, channels, inner_num_, 1.
+		      , top_data, sum_multiplier_.cpu_data(), 0., scale_data);     <span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
+
+<ol>
+  <li>对每个label output计算SoftMax</li>
+</ol>
+
+<figure class="highlight"><pre><code class="language-xml" data-lang="xml"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7</pre></td><td class="code"><pre>     
+// division
+for (int j = 0; j <span class="nt">&lt; channels</span><span class="err">;</span> <span class="err">j++)</span> <span class="err">{</span>
+	<span class="err">//</span> <span class="na">top_data =</span> <span class="s">top_data</span> <span class="err">/</span> <span class="err">scale_data</span>
+	<span class="err">caffe_div(inner_num_,</span> <span class="err">top_data,</span> <span class="err">scale_data,</span> <span class="err">top_data);</span>
+	<span class="err">top_data</span> <span class="err">+=</span> <span class="err">inner_num_;</span>
+<span class="err">}</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
+
 
 <br/>
 <div style="margin-top:10px;margin-bottom:10px">
   
   <span class="next">
     previous：
-    <a href="/reading/caffe-inner-product-layer.html">
-      Caffe Inner Product Layer
-    </a>
-  </span>
-   
-  
-  <span class="prev">
-    next：
     <a href="/reading/caffe-prelu-layer.html">
       Caffe Parameterized Rectified Linear Unit Layer
     </a>
   </span>
+   
   
 </div>
 <hr>
