@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Caffe SoftMax Layer - watch out while walking - ryen(irwenqiang#gmail.com)">
+    <title>
+      Caffe SoftMax Layer - watch out while walking
+    </title>
+    <!-- Bootstrap Core CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/css/blog.css" rel="stylesheet">
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media
+    queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file://
+    -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js">
+      </script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js">
+      </script>
+    <![endif]-->
+        <!-- jQuery Version 1.11.0 -->
+    <script src="/js/jquery-1.11.0.js"> </script>
+    <!-- Bootstrap Core JavaScript -->
+    <script src="/js/bootstrap.min.js"></script>
+    <!-- MatchJax JavaScript -->
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script> 
+  </head>
+  
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+            <span class="sr-only">
+              Toggle navigation
+            </span>
+            <span class="icon-bar">
+            </span>
+            <span class="icon-bar">
+            </span>
+            <span class="icon-bar">
+            </span>
+          </button>
+          <a class="navbar-brand" href="/index.html">
+            watch out while walking
+          </a>
+        </div>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+	    <!--
+            <li>
+              <a href="/categories.html">
+		categories
+              </a>
+            </li>
+	    -->
+            <li>
+              <a href="/archives.html">
+		Archives
+              </a>
+            </li>
+            <li>
+              <a href="/tags.html">
+		Tags
+              </a>
+            </li>
+            <li>
+              <a href="/about.html">
+		About
+              </a>
+            </li>
+            <li>
+              <a href="/plan.html">
+		Mission Statement
+              </a>
+            </li>
+          </ul>
+ 
+        </div>
+        <!-- /.navbar-collapse -->
+      </div>
+      <!-- /.container -->
+    </nav>
+    <!-- Page Content -->
+    <div class="container">
+      <div class="row">
+        <!-- Blog Entries Column -->
+        <div class="col-md-8">
+          <!-- Blog Post -->
+<!-- Title -->
+<h2>
+  Caffe SoftMax Layer
+  <div class="post-date"><a href="https://github.com/irwenqiang/irwenqiang.github.com/edit/master/_posts/2016-09-11-caffe-softmax-layer.markdown" target="_blank">纠错</a>&nbsp;&nbsp;
+	<span class="glyphicon glyphicon-time"></span>
+	11 Sep 2016
+  </div>
+</h2>
+<!-- Author -->
+<hr>
+<h4 id="reshape">一、Reshape</h4>
+<p>multiplier_data初始化为<script type="math/tex">R^{1\times2}</script>的矩阵，每个元素设置为1.   <br />
+outer_num_ = M_, 等于一次测试所用样本量大小batch_size  <br />
+inner_num = HW = 1</p>
+
+<h4 id="forwardcpu">二、Forward_cpu</h4>
+<p>实现SoftMax: <script type="math/tex">y_i = \max(0, x_i) + \alpha_i \min(0, x_i)</script>     <br />
+1. 拷贝<script type="math/tex">W^Tx</script>到top_data<script type="math/tex">\in R^{M\_ \times N\_}</script>  <br />
+<code class="highlighter-rouge">caffe_copy(inner_num_, bottom_data + i * dim, scale_data);</code>    <br />
+2. 计算每个label下，最大的<script type="math/tex">W^Tx</script></p>
+
+<figure class="highlight"><pre><code class="language-xml" data-lang="xml"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7</pre></td><td class="code"><pre>   
+for (int j = 0; j <span class="nt">&lt; channels</span><span class="err">;</span> <span class="err">j++)</span> <span class="err">{</span>
+      <span class="err">for</span> <span class="err">(int</span> <span class="na">k =</span> <span class="s">0;</span> <span class="err">k</span> <span class="err">&lt;</span> <span class="err">inner_num_;</span> <span class="err">k++)</span> <span class="err">{</span>
+        <span class="err">scale_data[k]</span> <span class="err">=</span> <span class="err">std::max(scale_data[k],</span>
+            <span class="err">bottom_data[i</span> <span class="err">*</span> <span class="err">dim</span> <span class="err">+</span> <span class="err">j</span> <span class="err">*</span> <span class="err">inner_num_</span> <span class="err">+</span> <span class="err">k]);</span>
+      <span class="err">}</span>
+<span class="err">}</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
+
+<ol>
+  <li>每个<script type="math/tex">W^Tx</script>减去最大值，避免指数运算结果太大</li>
+</ol>
+
+<figure class="highlight"><pre><code class="language-xml" data-lang="xml"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9</pre></td><td class="code"><pre>   
+// subtraction
+// top_data = -1 * sum_multiplier_.cpu_data() * scale_data + 1 * top_data
+// top_data: 			channels * inner_num_
+// sum_multiplier_.cpu_data: 	channels * 1
+// scale_data:			1 * inner_num_
+caffe_cpu_gemm<span class="nt">&lt;Dtype&gt;</span>(CblasNoTrans, CblasNoTrans
+		      , channels, inner_num_, 1, -1.
+  		      , sum_multiplier_.cpu_data(), scale_data, 1., top_data);      <span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
+
+<ol>
+  <li>计算指数</li>
+</ol>
+
+<figure class="highlight"><pre><code class="language-xml" data-lang="xml"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4</pre></td><td class="code"><pre>   
+// exponentiation
+// top_data[i...dim] = exp(top_data[i...dim])
+caffe_exp<span class="nt">&lt;Dtype&gt;</span>(dim, top_data, top_data);    <span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
+
+<ol>
+  <li>计算归一项</li>
+</ol>
+
+<figure class="highlight"><pre><code class="language-xml" data-lang="xml"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8</pre></td><td class="code"><pre>   
+// sum after exp
+// scale_data = top_data * sum_multiplier_.cpu_data
+// top_data: 			channels * inner_num_
+// sum_multiplier_.cpu_data:	channels * 1
+// scale_data:			inner_num_ * 1
+caffe_cpu_gemv<span class="nt">&lt;Dtype&gt;</span>(CblasTrans, channels, inner_num_, 1.
+		      , top_data, sum_multiplier_.cpu_data(), 0., scale_data);     <span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
+
+<ol>
+  <li>对每个label output计算SoftMax</li>
+</ol>
+
+<figure class="highlight"><pre><code class="language-xml" data-lang="xml"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7</pre></td><td class="code"><pre>     
+// division
+for (int j = 0; j <span class="nt">&lt; channels</span><span class="err">;</span> <span class="err">j++)</span> <span class="err">{</span>
+	<span class="err">//</span> <span class="na">top_data =</span> <span class="s">top_data</span> <span class="err">/</span> <span class="err">scale_data</span>
+	<span class="err">caffe_div(inner_num_,</span> <span class="err">top_data,</span> <span class="err">scale_data,</span> <span class="err">top_data);</span>
+	<span class="err">top_data</span> <span class="err">+=</span> <span class="err">inner_num_;</span>
+<span class="err">}</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure>
+
+
+<br/>
+<div style="margin-top:10px;margin-bottom:10px">
+  
+  <span class="next">
+    previous：
+    <a href="/reading/caffe-prelu-layer.html">
+      Caffe Parameterized Rectified Linear Unit Layer
+    </a>
+  </span>
+   
+  
+</div>
+<hr>
+<!-- Blog Comments -->
+<div class="media">
+  <div id="disqus_thread"></div>
+<script>
+/**
+* RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+* LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL; // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+
+s.src = '//ryen.disqus.com/embed.js';
+
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+ 
+</div>
+
+        </div>
+      </div>
+      <!-- /.row -->
+      <hr>
+      <!-- Footer -->
+      <footer>
+        <div class="row">
+          <div class="col-lg-12">
+                        <p align="center">
+				Copyright &copy; , hosted on <a href="https://github.com">GitHub</a>, powered by Jekyll. <a href="/atom.xml">[Feed]</a>
+            </p>
+ 
+          </div>
+          <!-- /.col-lg-12 -->
+        </div>
+        <!-- /.row -->
+      </footer>
+    </div>
+    <!-- /.container -->
+  </body>
+
+</html>

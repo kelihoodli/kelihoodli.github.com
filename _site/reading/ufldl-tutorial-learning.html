@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="ufldl-tutorial-learning - watch out while walking - ryen(irwenqiang#gmail.com)">
+    <title>
+      ufldl-tutorial-learning - watch out while walking
+    </title>
+    <!-- Bootstrap Core CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/css/blog.css" rel="stylesheet">
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media
+    queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file://
+    -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js">
+      </script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js">
+      </script>
+    <![endif]-->
+        <!-- jQuery Version 1.11.0 -->
+    <script src="/js/jquery-1.11.0.js"> </script>
+    <!-- Bootstrap Core JavaScript -->
+    <script src="/js/bootstrap.min.js"></script>
+    <!-- MatchJax JavaScript -->
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script> 
+  </head>
+  
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+            <span class="sr-only">
+              Toggle navigation
+            </span>
+            <span class="icon-bar">
+            </span>
+            <span class="icon-bar">
+            </span>
+            <span class="icon-bar">
+            </span>
+          </button>
+          <a class="navbar-brand" href="/index.html">
+            watch out while walking
+          </a>
+        </div>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+	    <!--
+            <li>
+              <a href="/categories.html">
+		categories
+              </a>
+            </li>
+	    -->
+            <li>
+              <a href="/archives.html">
+		Archives
+              </a>
+            </li>
+            <li>
+              <a href="/tags.html">
+		Tags
+              </a>
+            </li>
+            <li>
+              <a href="/about.html">
+		About
+              </a>
+            </li>
+            <li>
+              <a href="/plan.html">
+		Mission Statement
+              </a>
+            </li>
+          </ul>
+ 
+        </div>
+        <!-- /.navbar-collapse -->
+      </div>
+      <!-- /.container -->
+    </nav>
+    <!-- Page Content -->
+    <div class="container">
+      <div class="row">
+        <!-- Blog Entries Column -->
+        <div class="col-md-8">
+          <!-- Blog Post -->
+<!-- Title -->
+<h2>
+  ufldl-tutorial-learning
+  <div class="post-date"><a href="https://github.com/irwenqiang/irwenqiang.github.com/edit/master/_posts/2016-03-22-ufldl-tutorial-learning.markdown" target="_blank">纠错</a>&nbsp;&nbsp;
+	<span class="glyphicon glyphicon-time"></span>
+	22 Mar 2016
+  </div>
+</h2>
+<!-- Author -->
+<hr>
+<ol>
+  <li>学习Sparse Autoencoder时，对于神经网络为什么要使用反向传播求梯度不理解:   <br />
+可以参考:<br />
+<a href="https://www.zhihu.com/question/24827633/answer/91489990">如何理解神经网络里面的反向传播算法?</a>中, <a href="https://www.zhihu.com/people/lilinglai">@Linglai Li</a>的理解 以及 <a href="https://www.zhihu.com/people/chen-wei-yuan">@陈唯源</a>提供的参考链接.</li>
+  <li>
+    <p>深度学习的Local optima问题    <br />
+当训练点击率预估的凸优化问题, 最小化cross-entropy, 时，还会有Local optima的问题吗，怎么理解?  <br />
+<a href="https://www.zhihu.com/people/li-eta">li Eta</a>给出了<a href="https://www.zhihu.com/question/38549801/answer/77027608">很好的解释</a>. 虽然神经网络的最后一层可以采用凸函数,<br />
+但是反向传播算法在计算整个网络的梯度时，需要和前面<script type="math/tex">L-1</script>层的激活函数一起考虑，导致最后的Loss function并不是凸的.</p>
+  </li>
+  <li>Diffusion of gradients问题, 实践的时候观察一下.    <br />
+这个问题<a href="http://michaelnielsen.org/">Michael Nielsen</a>在<a href="http://neuralnetworksanddeeplearning.com/chap5.html">Why are deep neural networks hard to train?</a>  里面做了讨论. <br />
+采用每个隐含层<em>i</em>的<script type="math/tex">||w_i||</script>和<script type="math/tex">||b_i||</script>来衡量每个隐含层的学习速率. 并不严谨的证明了是因为每个神经元的<script type="math/tex">w_j\sigma^{'}(z_j)</script>很小引起的.</li>
+</ol>
+
+
+<br/>
+<div style="margin-top:10px;margin-bottom:10px">
+  
+  <span class="next">
+    previous：
+    <a href="/records/import-local-jar-via-maven.html">
+      一个在IDEA上Maven使用本地Jar的问题
+    </a>
+  </span>
+   
+  
+  <span class="prev">
+    next：
+    <a href="/reading/caffe-blob.html">
+      Caffe Blob
+    </a>
+  </span>
+  
+</div>
+<hr>
+<!-- Blog Comments -->
+<div class="media">
+  <div id="disqus_thread"></div>
+<script>
+/**
+* RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+* LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL; // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+
+s.src = '//ryen.disqus.com/embed.js';
+
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+ 
+</div>
+
+        </div>
+      </div>
+      <!-- /.row -->
+      <hr>
+      <!-- Footer -->
+      <footer>
+        <div class="row">
+          <div class="col-lg-12">
+                        <p align="center">
+				Copyright &copy; , hosted on <a href="https://github.com">GitHub</a>, powered by Jekyll. <a href="/atom.xml">[Feed]</a>
+            </p>
+ 
+          </div>
+          <!-- /.col-lg-12 -->
+        </div>
+        <!-- /.row -->
+      </footer>
+    </div>
+    <!-- /.container -->
+  </body>
+
+</html>
