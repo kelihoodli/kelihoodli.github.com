@@ -57,5 +57,6 @@ Also, during initialization the Net explains its initialization by logging to IN
 1. [Caffe 程式閱讀筆記](http://city.shaform.com/blog/2016/02/26/caffe.html)   
 2. [Blobs, Layers, and Nets: anatomy of a Caffe model](http://caffe.berkeleyvision.org/tutorial/net_layer_blob.html)    
 3. [Caffe中的Net类是如何工作的](http://withwsf.github.io/2016/05/24/Caffe%E4%B8%AD%E7%9A%84Net%E7%B1%BB%E6%98%AF%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C%E7%9A%84/)       
-4. [在Windows中阅读Caffe代码](http://withwsf.github.io/2016/05/23/%E5%9C%A8Windows%E9%98%85%E8%AF%BBCaffe%E4%BB%A3%E7%A0%81/)     
+4. [在Windows中阅读Caffe代码](http://withwsf.github.io/2016/05/23/%E5%9C%A8Windows%E9%98%85%E8%AF%BBCaffe%E4%BB%A3%E7%A0%81/)        
+5. [梳理caffe代码net(四)](http://blog.csdn.net/langb2014/article/details/50987593)    
 
