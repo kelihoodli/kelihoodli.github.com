@@ -44,4 +44,6 @@ PReLU的反向传播算法思路和InnerProductLayer是一致的, 可以参考UF
 #### ref     
 1. [caffe::PReLULayer< Dtype > Class Template](http://caffe.berkeleyvision.org/doxygen/classcaffe_1_1PReLULayer.html)     
 2. [反向传导算法](http://ufldl.stanford.edu/wiki/index.php/%E5%8F%8D%E5%90%91%E4%BC%A0%E5%AF%BC%E7%AE%97%E6%B3%95)
-2. [Cmd Markdown 公式指导手册](https://www.zybuluo.com/codeep/note/163962)     
+3. [Cmd Markdown 公式指导手册](https://www.zybuluo.com/codeep/note/163962)      
+4. [《Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet Classification》阅读笔记与实现](http://blog.csdn.net/happynear/article/details/45440811)
+
