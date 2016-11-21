@@ -24,4 +24,6 @@ layer {
 5. [batch_norm_layer.hpp](https://github.com/BVLC/caffe/blob/master/include/caffe/layers/batch_norm_layer.hpp#L25-L27)    
 6. [Batch Normalization   Loss is not decreased](https://github.com/BVLC/caffe/issues/3347)     
 7. [is Batch Normalization supported by Caffe?](https://groups.google.com/forum/#!topic/caffe-users/h4E6FV_XkfA)    
+8. [解读Batch Normalization](http://blog.csdn.net/shuzfan/article/details/50723877)        
+9. [caffe层解读系列——BatchNorm](http://blog.csdn.net/shuzfan/article/details/52729424)      
 
